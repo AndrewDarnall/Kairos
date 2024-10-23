@@ -1,1 +1,10 @@
+# OS_Specific
 .DS_Store
+
+# Unity_Specific
+[Ll]ibrary/
+[Tt]emp/
+[Bb]uild/
+[Bb]uilds/
+[Aa]ssets/AssetStoreTools*
+[Ll]ogs/
