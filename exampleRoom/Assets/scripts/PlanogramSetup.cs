@@ -26,21 +26,29 @@ public class PlanogramManager : MonoBehaviour
 
     private void EnsureCollider(GameObject obj)
     {
-        if (obj.GetComponent<Collider>() == null)
+        if (obj.GetComponent<MeshCollider>() == null)
         {
-            obj.AddComponent<BoxCollider>(); // Add BoxCollider if none exists
+            obj.AddComponent<MeshCollider>(); // Add MeshCollider if none exists
             Debug.Log("Collider added.");
         }
     }
 
     private void CalculateDimensions(GameObject obj)
     {
-        Collider collider = obj.GetComponent<Collider>();
+        MeshCollider collider = obj.GetComponent<MeshCollider>();
         if (collider != null)
         {
+            // Ottieni i bounds dal MeshCollider
             Bounds bounds = collider.bounds;
             Debug.Log($"Planogram dimensions: Width: {bounds.size.x}, Height: {bounds.size.y}, Depth: {bounds.size.z}");
             Debug.Log($"Radius: {bounds.extents.magnitude}, Center: ({bounds.center.x}, {bounds.center.y}, {bounds.center.z})");
+
+            // Calcola la dimensione della base
+            float baseWidth = bounds.size.x;
+            float baseLength = bounds.size.z;
+
+            // Stampa le dimensioni della base nella console
+            Debug.Log($"Dimensione della base della mesh: Larghezza = {baseWidth}, Lunghezza = {baseLength}");
         }
         else
         {
