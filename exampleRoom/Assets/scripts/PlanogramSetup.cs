@@ -50,9 +50,5 @@ public class PlanogramManager : MonoBehaviour
             // Stampa le dimensioni della base nella console
             Debug.Log($"Dimensione della base della mesh: Larghezza = {baseWidth}, Lunghezza = {baseLength}");
         }
-        else
-        {
-            Debug.LogError("No collider found to calculate dimensions.");
-        }
     }
 }
