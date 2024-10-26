@@ -2,74 +2,78 @@ using UnityEngine;
 
 public class PlanogramManager : MonoBehaviour
 {
-    private GameObject planogramPrefab;
+    public GameObject prefab; // Assign prefab in the inspector
 
     void Start()
     {
-        // Ensure planogramPrefab is assigned before proceeding
-        if (planogramPrefab == null)
+        if (prefab != null)
         {
-            Debug.LogError("Planogram prefab not assigned!");
-            return;
-        }
+            // Crea un'istanza del prefab
+            GameObject instance = Instantiate(prefab);
 
-        // Instantiate the planogram and configure it
-        GameObject planogram = Instantiate(planogramPrefab, transform.position, transform.rotation);
-        EnsureMeshCollider(planogram);
-        
-        GameObject plane = CreatePlane(planogram);
-        HidePlanogramMeshRenderers(planogram, plane); 
-        CalculateBaseDimensions(plane);
-    }
+            // Controlla se il prefab ha un MeshFilter e un MeshRenderer
+            MeshFilter meshFilter = instance.GetComponent<MeshFilter>();
+            MeshRenderer meshRenderer = instance.GetComponent<MeshRenderer>();
 
-    private void EnsureMeshCollider(GameObject planogram)
-    {
-        // Add a MeshCollider if one does not exist
-        if (planogram.GetComponent<MeshCollider>() == null)
-        {
-            MeshCollider collider = planogram.AddComponent<MeshCollider>();
-            collider.convex = true;
-        }
-        Physics.SyncTransforms(); // Sync physics transforms
-    }
-
-    private void HidePlanogramMeshRenderers(GameObject planogram, GameObject plane)
-    {
-        foreach (var renderer in planogram.GetComponentsInChildren<MeshRenderer>(true))
-        {
-            if (renderer.gameObject != plane) // Check if the renderer belongs to the plane
+            // Se non ci sono, aggiungi i componenti
+            if (meshFilter == null)
             {
-                renderer.enabled = false;
+                meshFilter = instance.AddComponent<MeshFilter>();
+
+                // Crea una mesh semplice (un piano)
+                Mesh mesh = new Mesh();
+                Vector3[] vertices = new Vector3[]
+                {
+                    new Vector3(-0.5f, 0, -0.5f),
+                    new Vector3(0.5f, 0, -0.5f),
+                    new Vector3(-0.5f, 0, 0.5f),
+                    new Vector3(0.5f, 0, 0.5f),
+                };
+
+                int[] triangles = new int[]
+                {
+                    0, 2, 1, // triangolo 1
+                    1, 2, 3  // triangolo 2
+                };
+
+                mesh.vertices = vertices;
+                mesh.triangles = triangles;
+                mesh.RecalculateNormals(); // Calcola le normali
+                meshFilter.mesh = mesh; // Assegna la mesh al MeshFilter
+            }
+
+            if (meshRenderer == null)
+            {
+                meshRenderer = instance.AddComponent<MeshRenderer>();
+                // Puoi anche assegnare un materiale qui se necessario
+                meshRenderer.material = new Material(Shader.Find("Standard")); // Materiale standard
+            }
+
+            // Ottieni il Renderer del prefab
+            Renderer renderer = instance.GetComponent<Renderer>();
+
+            // Se il renderer è presente
+            if (renderer != null)
+            {
+                // Ottieni il bounding box del Renderer
+                Bounds bounds = renderer.bounds;
+
+                // Calcola lunghezza e larghezza
+                float lunghezza = bounds.size.x; // Dimensione lungo l'asse X
+                float larghezza = bounds.size.z;  // Dimensione lungo l'asse Z
+
+                // Stampa i risultati nella console
+                Debug.Log("Lunghezza del prefab: " + lunghezza);
+                Debug.Log("Larghezza del prefab: " + larghezza);
+            }
+            else
+            {
+                Debug.LogError("Nessun Renderer trovato sul prefab o nei suoi figli.");
             }
         }
-    }
-
-    private GameObject CreatePlane(GameObject obj)
-    {
-        GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
-        MeshCollider collider = obj.GetComponent<MeshCollider>();
-
-        // Calculate and set plane properties based on the planogram's collider
-        Vector3 bottomPosition = new Vector3(collider.bounds.center.x, collider.bounds.min.y, collider.bounds.center.z);
-        plane.transform.SetPositionAndRotation(bottomPosition, obj.transform.rotation);
-        plane.transform.SetParent(obj.transform, true); // Set the plane as a child of the planogram
-
-        // Configure the plane's renderer
-        MeshRenderer planeRenderer = plane.GetComponent<MeshRenderer>();
-        if (planeRenderer != null)
+        else
         {
-            planeRenderer.material = new Material(Shader.Find("Standard")) { color = Color.white }; // Assign a visible material
-            planeRenderer.enabled = true; // Make the plane visible
+            Debug.LogError("Nessun prefab assegnato nell'inspector.");
         }
-
-        return plane;
-    }
-
-    private void CalculateBaseDimensions(GameObject plane)
-    {
-        Debug.Log($"Plane Dimensions:\n" +
-                    $"Position [X: {plane.transform.position.x:F2}, Y: {plane.transform.position.y:F2}, Z: {plane.transform.position.z:F2}]\n" +
-                    $"Rotation [X: {plane.transform.rotation.eulerAngles.x:F2}, Y: {plane.transform.rotation.eulerAngles.y:F2}, Z: {plane.transform.rotation.eulerAngles.z:F2}]\n" +
-                    $"Scale [X: {plane.transform.localScale.x:F2}, Y: {plane.transform.localScale.y:F2}, Z: {plane.transform.localScale.z:F2}]");
     }
 }
