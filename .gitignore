@@ -1,4 +1,9 @@
+# Unity specific Directories
 Library/
 Temp/
 Logs/
 Build/
+
+# Unity specific files
+*.csproj
+*.sln
