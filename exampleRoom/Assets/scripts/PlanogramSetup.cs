@@ -8,63 +8,35 @@ public class PlanogramManager : MonoBehaviour
     {
         if (prefab != null)
         {
-            // Crea un'istanza del prefab
+            // Create an instance of the prefab
             GameObject instance = Instantiate(prefab);
 
-            // Controlla se il prefab ha un MeshFilter e un MeshRenderer
-            MeshFilter meshFilter = instance.GetComponent<MeshFilter>();
-            MeshRenderer meshRenderer = instance.GetComponent<MeshRenderer>();
+            // Print the scale of the prefab
+            Vector3 scalaPrefab = instance.transform.localScale;
+            Debug.Log("Scala del prefab: " + scalaPrefab);
 
-            // Se non ci sono, aggiungi i componenti
-            if (meshFilter == null)
-            {
-                meshFilter = instance.AddComponent<MeshFilter>();
+            // Search for a Renderer in the prefab or its children
+            Renderer renderer = instance.GetComponentInChildren<Renderer>();
 
-                // Crea una mesh semplice (un piano)
-                Mesh mesh = new Mesh();
-                Vector3[] vertices = new Vector3[]
-                {
-                    new Vector3(-0.5f, 0, -0.5f),
-                    new Vector3(0.5f, 0, -0.5f),
-                    new Vector3(-0.5f, 0, 0.5f),
-                    new Vector3(0.5f, 0, 0.5f),
-                };
-
-                int[] triangles = new int[]
-                {
-                    0, 2, 1, // triangolo 1
-                    1, 2, 3  // triangolo 2
-                };
-
-                mesh.vertices = vertices;
-                mesh.triangles = triangles;
-                mesh.RecalculateNormals(); // Calcola le normali
-                meshFilter.mesh = mesh; // Assegna la mesh al MeshFilter
-            }
-
-            if (meshRenderer == null)
-            {
-                meshRenderer = instance.AddComponent<MeshRenderer>();
-                // Puoi anche assegnare un materiale qui se necessario
-                meshRenderer.material = new Material(Shader.Find("Standard")); // Materiale standard
-            }
-
-            // Ottieni il Renderer del prefab
-            Renderer renderer = instance.GetComponent<Renderer>();
-
-            // Se il renderer è presente
             if (renderer != null)
             {
-                // Ottieni il bounding box del Renderer
+                // Get bounding box dimensions
                 Bounds bounds = renderer.bounds;
+                float lunghezza = bounds.size.x;
+                float altezza = bounds.size.y;
+                float larghezza = bounds.size.z;
 
-                // Calcola lunghezza e larghezza
-                float lunghezza = bounds.size.x; // Dimensione lungo l'asse X
-                float larghezza = bounds.size.z;  // Dimensione lungo l'asse Z
+                // Print the dimensions of the "piano"
+                Debug.Log("Lunghezza del piano: " + lunghezza);
+                Debug.Log("Altezza del piano: " + altezza);
+                Debug.Log("Larghezza del piano: " + larghezza);
 
-                // Stampa i risultati nella console
-                Debug.Log("Lunghezza del prefab: " + lunghezza);
-                Debug.Log("Larghezza del prefab: " + larghezza);
+                // Calculate scaled dimensions
+                lunghezza /= (10);
+                larghezza /= (10);
+
+                // Create a new GameObject for the "piano" using a primitive plane
+                CreatePianoGameObject(lunghezza, altezza, larghezza, instance.transform);
             }
             else
             {
@@ -75,5 +47,33 @@ public class PlanogramManager : MonoBehaviour
         {
             Debug.LogError("Nessun prefab assegnato nell'inspector.");
         }
+    }
+
+    void CreatePianoGameObject(float lunghezza, float altezza, float larghezza, Transform parentTransform)
+    {
+        // Create a primitive plane
+        GameObject plane = GameObject.CreatePrimitive(PrimitiveType.Plane);
+
+        // Set the position of the plane
+        Vector3 bottomPosition = new Vector3(0, 0, 200); // Initial position (can be adjusted later)
+        plane.transform.position = bottomPosition;
+
+        // Set the plane as a child of the prefab instance
+        //plane.transform.SetParent(parentTransform, true);
+
+        // Scale the plane to fit the dimensions
+        plane.transform.localScale = new Vector3(lunghezza, 1, larghezza);
+
+        // Configure the plane's renderer
+        MeshRenderer planeRenderer = plane.GetComponent<MeshRenderer>();
+        if (planeRenderer != null)
+        {
+            planeRenderer.material = new Material(Shader.Find("Standard")) { color = Color.white }; // Assign a visible material
+            planeRenderer.enabled = true; // Make the plane visible
+        }
+
+        // Optionally, add a MeshCollider if needed
+        MeshCollider collider = plane.AddComponent<MeshCollider>();
+        collider.sharedMesh = plane.GetComponent<MeshFilter>().mesh; // Assign the plane's mesh to the collider
     }
 }
