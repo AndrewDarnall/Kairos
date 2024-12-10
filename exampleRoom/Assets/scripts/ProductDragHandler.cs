@@ -1,35 +1,35 @@
-using System.Collections;
-using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.EventSystems;
 
-public class ProductDragHandler : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
+public class DragAndDrop : MonoBehaviour, IBeginDragHandler, IDragHandler, IEndDragHandler
 {
-    private Canvas canvas;
-    private RectTransform rectTransform;
-    private CanvasGroup canvasGroup;
+    private Vector3 offset;
+    private Camera mainCamera;
 
-    void Awake()
+    void Start()
     {
-        rectTransform = GetComponent<RectTransform>();
-        canvasGroup = GetComponent<CanvasGroup>();
-        canvas = FindObjectOfType<Canvas>();
+        mainCamera = Camera.main;
     }
 
     public void OnBeginDrag(PointerEventData eventData)
     {
-        canvasGroup.alpha = 0.6f; // Rende l'oggetto semitrasparente
-        canvasGroup.blocksRaycasts = false; // Evita interferenze con il Raycast
+        offset = transform.position - GetMouseWorldPosition();
     }
 
     public void OnDrag(PointerEventData eventData)
     {
-        rectTransform.anchoredPosition += eventData.delta / canvas.scaleFactor;
+        transform.position = GetMouseWorldPosition() + offset;
     }
 
     public void OnEndDrag(PointerEventData eventData)
     {
-        canvasGroup.alpha = 1f;
-        canvasGroup.blocksRaycasts = true;
+        // Rilascia l'oggetto in posizione
+    }
+
+    private Vector3 GetMouseWorldPosition()
+    {
+        Vector3 mousePos = Input.mousePosition;
+        mousePos.z = mainCamera.WorldToScreenPoint(transform.position).z;
+        return mainCamera.ScreenToWorldPoint(mousePos);
     }
 }

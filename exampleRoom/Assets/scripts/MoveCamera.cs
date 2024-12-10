@@ -14,7 +14,7 @@ public class moveCamera : MonoBehaviour
 
     void Start()
     {
-        Cursor.lockState = CursorLockMode.Locked; // Blocca il cursore al centro dello schermo
+        // Cursor.lockState = CursorLockMode.Locked;  Blocca il cursore al centro dello schermo
         currentMoveSpeed = baseMoveSpeed; // Imposta la velocità iniziale
     }
 
