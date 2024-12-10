@@ -132,7 +132,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2666279474047682905}
   m_Layer: 0
-  m_Name: planogram
+  m_Name: Planogram
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
