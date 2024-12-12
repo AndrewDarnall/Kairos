@@ -17,7 +17,7 @@ public class moveCamera : MonoBehaviour
         // Cursor.lockState = CursorLockMode.Locked;  Blocca il cursore al centro dello schermo
         currentMoveSpeed = baseMoveSpeed; // Imposta la velocità iniziale
     }
-/*
+
     void Update()
     {
         // Movimento della telecamera con il mouse
@@ -44,5 +44,5 @@ public class moveCamera : MonoBehaviour
         // Muovi la telecamera con la velocità attuale
         transform.position += move * currentMoveSpeed * Time.deltaTime;
     }
-    */
+    
 }

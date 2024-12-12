@@ -1,27 +1,25 @@
-using System.IO;
+using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 
 public class ProductListLoader : MonoBehaviour
 {
-    public GameObject productEntryPrefab; // Prefab for the button
-    public Transform contentPanel;       // Content of the Scroll View
+    public GameObject productEntryPrefab; // Prefab for the button in the menu
+    public Transform contentPanel;        // Content of the Scroll View
+    public GameObject productPrefab;      // Prefab to instantiate in the scene
+    public GameObject productListManager; // Parent GameObject (ProductListManager)
+
+    private Dictionary<string, GameObject> instantiatedProducts = new Dictionary<string, GameObject>();
 
     void Start()
     {
-        if (productEntryPrefab == null)
-            Debug.LogError("Product Entry Prefab not assigned!");
-
-        if (contentPanel == null)
-            Debug.LogError("Content Panel not assigned!");
-
         LoadProducts();
     }
 
     public void LoadProducts()
     {
-        // Load the text file containing product names
+        // Carica il file dei prodotti
         TextAsset file = Resources.Load<TextAsset>("Products");
         if (file == null)
         {
@@ -29,32 +27,87 @@ public class ProductListLoader : MonoBehaviour
             return;
         }
 
-        // Split the file contents into individual product names
+        // Suddivide i prodotti e li processa
         string[] productNames = file.text.Split('\n');
 
         foreach (string productName in productNames)
         {
             if (!string.IsNullOrWhiteSpace(productName))
             {
-                // Instantiate a new entry
+                string trimmedName = productName.Trim();
+
+                // Controlla se esiste già un'entry nella lista
+                Transform existingEntry = contentPanel.Find(trimmedName);
+                if (existingEntry != null)
+                {
+                    Debug.LogWarning($"Menu entry for '{trimmedName}' already exists!");
+                    continue;
+                }
+
+                // Istanzia un nuovo menu entry
                 GameObject newEntry = Instantiate(productEntryPrefab, contentPanel);
 
-                // Set the button text to the product name
+                // Configura il testo del pulsante
                 TextMeshProUGUI textComponent = newEntry.GetComponentInChildren<TextMeshProUGUI>();
                 if (textComponent != null)
                 {
-                    textComponent.text = productName.Trim();
+                    textComponent.text = trimmedName;
                 }
 
-                // Assign the product name to the ProductEntryHandler script
-                ProductEntryHandler handler = newEntry.GetComponent<ProductEntryHandler>();
-                if (handler != null)
+                // Configura il pulsante
+                Button button = newEntry.GetComponent<Button>();
+                if (button != null)
                 {
-                    handler.productName = productName.Trim();
+                    button.onClick.AddListener(() => SpawnProduct(trimmedName));
                 }
 
-                Debug.Log("Loaded product: " + productName.Trim());
+                // Rinomina il nuovo oggetto per gestione più semplice
+                newEntry.name = trimmedName;
+
+                Debug.Log($"Loaded menu entry: {trimmedName}");
             }
         }
     }
+
+    private void SpawnProduct(string productName)
+    {
+        // Trimma il nome per sicurezza
+        productName = productName.Trim();
+
+        // Controlla se il prodotto esiste già nel dizionario (già instanziato)
+        if (instantiatedProducts.ContainsKey(productName))
+        {
+            Debug.LogWarning($"Product '{productName}' is already instantiated!");
+            return;
+        }
+
+        // Calcola la posizione di spawn
+        Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1f;
+
+        // Istanzia il prodotto
+        GameObject newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity);
+
+        // Imposta il parent come ProductListManager
+        newProduct.transform.SetParent(productListManager.transform);
+
+        // Rinomina l'oggetto instanziato
+        newProduct.name = productName;
+
+        // Aggiungi al dizionario per evitare duplicati
+        instantiatedProducts[productName] = newProduct;
+
+        // Trova e rimuove l'entry del prodotto dalla lista UI
+        foreach (Transform child in contentPanel)
+        {
+            TextMeshProUGUI textComponent = child.GetComponentInChildren<TextMeshProUGUI>();
+            if (textComponent != null && textComponent.text == productName)
+            {
+                Destroy(child.gameObject); // Elimina il pulsante dalla lista
+                break;
+            }
+        }
+
+        Debug.Log($"Spawned product '{productName}' and removed from the UI list.");
+    }
+
 }
