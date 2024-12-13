@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro; // Namespace necessario per TextMeshPro
 
 public class moveCamera : MonoBehaviour
 {
@@ -11,9 +12,11 @@ public class moveCamera : MonoBehaviour
 
     private bool isActive = false; // Stato del movimento (attivo o disattivo)
 
+    public TMP_Text statusText; // Riferimento al componente TMP_Text per l'avviso
+
     void Start()
     {
-        Cursor.lockState = CursorLockMode.None;  
+        UpdateStatusText();
     }
 
     void Update()
@@ -22,15 +25,17 @@ public class moveCamera : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.C))
         {
             isActive = !isActive; // Alterna lo stato
+            UpdateStatusText();  // Aggiorna il testo quando lo stato cambia
         }
 
         if (!isActive){
-            Cursor.lockState = CursorLockMode.None; 
+            Cursor.lockState = CursorLockMode.None; // Rilascia il cursore
             return; // Se inattivo, esci dalla funzione Update
         }
 
+        Cursor.lockState = CursorLockMode.Locked; // Blocca il cursore
+
         // Movimento della telecamera con il mouse
-        Cursor.lockState = CursorLockMode.Locked;
         rotationY += Input.GetAxis("Mouse X") * sensitivity;
         rotationX += Input.GetAxis("Mouse Y") * sensitivity;
         rotationX = Mathf.Clamp(rotationX, -90f, 90f); // Limita la rotazione verticale
@@ -43,5 +48,14 @@ public class moveCamera : MonoBehaviour
 
         // Muovi la telecamera con la velocità fissa
         transform.position += move * moveSpeed * Time.deltaTime;
+    }
+
+    // Metodo per aggiornare il testo dello stato
+    void UpdateStatusText()
+    {
+        if (statusText != null)
+        {
+            statusText.text = isActive ? "Camera Movement: ON" : "Camera Movement: OFF";
+        }
     }
 }
