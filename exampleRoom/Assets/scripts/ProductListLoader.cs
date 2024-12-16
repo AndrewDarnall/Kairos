@@ -10,8 +10,6 @@ public class ProductListLoader : MonoBehaviour
     public GameObject productPrefab;      // Prefab to instantiate in the scene
     public GameObject productListManager; // Parent GameObject (ProductListManager)
 
-    private Dictionary<string, GameObject> instantiatedProducts = new Dictionary<string, GameObject>();
-
     void Start()
     {
         LoadProducts();
@@ -58,6 +56,7 @@ public class ProductListLoader : MonoBehaviour
                 Button button = newEntry.GetComponent<Button>();
                 if (button != null)
                 {
+                    button.onClick.RemoveAllListeners(); // Rimuove listener esistenti
                     button.onClick.AddListener(() => SpawnProduct(trimmedName));
                 }
 
@@ -74,13 +73,6 @@ public class ProductListLoader : MonoBehaviour
         // Trimma il nome per sicurezza
         productName = productName.Trim();
 
-        // Controlla se il prodotto esiste già nel dizionario (già instanziato)
-        if (instantiatedProducts.ContainsKey(productName))
-        {
-            Debug.LogWarning($"Product '{productName}' is already instantiated!");
-            return;
-        }
-
         // Calcola la posizione di spawn
         Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1f;
 
@@ -92,9 +84,6 @@ public class ProductListLoader : MonoBehaviour
 
         // Rinomina l'oggetto instanziato
         newProduct.name = productName;
-
-        // Aggiungi al dizionario per evitare duplicati
-        instantiatedProducts[productName] = newProduct;
 
         // Trova e rimuove l'entry del prodotto dalla lista UI
         foreach (Transform child in contentPanel)
@@ -109,5 +98,4 @@ public class ProductListLoader : MonoBehaviour
 
         Debug.Log($"Spawned product '{productName}' and removed from the UI list.");
     }
-
 }
