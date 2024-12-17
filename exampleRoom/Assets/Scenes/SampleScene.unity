@@ -651,6 +651,8 @@ MonoBehaviour:
   sensitivity: 30
   moveSpeed: 100
   statusText: {fileID: 1396219193}
+  topViewHeight: 250
+  heightAdjustSpeed: 50
 --- !u!1001 &1021404924
 PrefabInstance:
   m_ObjectHideFlags: 0
