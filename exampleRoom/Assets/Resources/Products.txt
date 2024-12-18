@@ -1,11 +1,10 @@
-Pane
-Latte
 Uova
 Pasta
 Riso
 Olio d'oliva
 Zucchero
 Sale
+Burro
 Farina
 Formaggio
 Prosciutto
@@ -17,3 +16,4 @@ Carote
 Frutta mista
 Yogurt
 Caffè
+Pane

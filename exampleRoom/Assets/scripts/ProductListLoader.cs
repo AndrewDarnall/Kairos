@@ -12,14 +12,13 @@ public class ProductListLoader : MonoBehaviour
     public GameObject productPrefab;      // Prefab to instantiate in the scene
     public GameObject productListManager; // Parent GameObject (ProductListManager)
     public GameObject textTagPrefab;      // Prefab per il tag testuale (TextMeshPro)
+    private string filePath = "Assets/Resources/Products.txt";
 
-    private List<string> availableProducts = new List<string>();
-    private List<string> removedProducts = new List<string>();
-
+    private List<string> availableProducts = new List<string>(); // Lista dei prodotti disponibili
     private string saveFolder = "Assets/SavedPrefabs"; // Cartella di salvataggio
 
     void Start()
-    {   
+    {
         contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
         LoadProducts();
     }
@@ -28,7 +27,7 @@ public class ProductListLoader : MonoBehaviour
     {
         HandleDeletion();
 
-        if (Input.GetKeyDown(KeyCode.S))      
+        if (Input.GetKeyDown(KeyCode.S))
         {
             SaveProductListManager();
             SaveProductsToFile();
@@ -60,11 +59,13 @@ public class ProductListLoader : MonoBehaviour
 
     private void UpdateProductListUI()
     {
+        // Pulisce la UI
         foreach (Transform child in contentPanel)
         {
             Destroy(child.gameObject);
         }
 
+        // Aggiunge i prodotti disponibili nella UI
         foreach (string productName in availableProducts)
         {
             AddProductToUI(productName);
@@ -100,44 +101,28 @@ public class ProductListLoader : MonoBehaviour
         newProduct.name = productName;
         newProduct.transform.SetParent(productListManager.transform);
 
-        // Aggiungi il "tag testuale" sopra il prodotto
+        // Aggiunge il "tag testuale" sopra il prodotto
         if (textTagPrefab != null)
         {
-            // Instanzia il prefab dell'etichetta
             GameObject textTag = Instantiate(textTagPrefab);
-
-            // Imposta il "parent" del testo come il prodotto appena creato
             textTag.transform.SetParent(newProduct.transform);
+            textTag.transform.localPosition = new Vector3(0, 2f, 0);
+            textTag.transform.localScale = Vector3.one * 0.5f;
 
-            // Posiziona l'etichetta sopra il prodotto
-            textTag.transform.localPosition = new Vector3(0, 2f, 0); // Altezza sopra il prodotto
-            textTag.transform.localScale = Vector3.one * 0.5f; // Riduci la scala se necessario
-
-            //Metti la dimensione font pari a 36
-            textTag.GetComponent<TextMeshPro>().fontSize = 150;
-
-
-            // Configura il componente TextMeshPro
             TextMeshPro textMesh = textTag.GetComponent<TextMeshPro>();
             if (textMesh != null)
             {
-                // Pulisce il testo predefinito (se presente)
-                textMesh.text = "";  // Azzeriamo il testo se c'è un valore predefinito
-
-                // Imposta il testo con il nome del prodotto
-                textMesh.text = productName; // Imposta il testo come il nome del prodotto
-
-                // Impostazioni aggiuntive per il testo (facoltativo)
-                textMesh.alignment = TextAlignmentOptions.Center; // Allineamento centrato
-                textMesh.fontSize = 150f; // Dimensione leggibile
-                textMesh.color = Color.yellow; // Colore per visibilità
+                textMesh.text = productName;
+                textMesh.alignment = TextAlignmentOptions.Center;
+                textMesh.fontSize = 150f;
+                textMesh.color = Color.yellow;
             }
         }
 
-        // Aggiorna le liste
+        // Rimuove il prodotto dalla lista disponibile
         availableProducts.Remove(productName);
-        removedProducts.Add(productName);
 
+        // Aggiorna l'interfaccia utente
         UpdateProductListUI();
         Debug.Log($"Spawned product '{productName}' with tag and removed from the UI list.");
     }
@@ -146,7 +131,6 @@ public class ProductListLoader : MonoBehaviour
     {
         if (Input.GetKey(KeyCode.D)) // Tiene premuto D
         {
-            // Controlla il click del mouse
             if (Input.GetMouseButtonDown(0)) // Click sinistro
             {
                 Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
@@ -167,9 +151,9 @@ public class ProductListLoader : MonoBehaviour
 
         Destroy(product);
 
-        if (removedProducts.Contains(productName))
+        // Riaggiunge il prodotto nella lista disponibile
+        if (!availableProducts.Contains(productName))
         {
-            removedProducts.Remove(productName);
             availableProducts.Add(productName);
         }
 
@@ -179,13 +163,6 @@ public class ProductListLoader : MonoBehaviour
 
     void SaveProductListManager()
     {
-        // Verifica che ProductListManager sia assegnato
-        if (productListManager == null)
-        {
-            Debug.LogError("ProductListManager is not assigned!");
-            return;
-        }
-
         // Crea la cartella di salvataggio se non esiste
         if (!Directory.Exists(saveFolder))
         {
@@ -195,7 +172,7 @@ public class ProductListLoader : MonoBehaviour
 
         // Genera il percorso del prefab
         string prefabPath = Path.Combine(saveFolder, productListManager.name + ".prefab");
-        
+
         // Salva il prefab
         GameObject prefab = PrefabUtility.SaveAsPrefabAsset(productListManager, prefabPath);
         if (prefab != null)
@@ -210,15 +187,14 @@ public class ProductListLoader : MonoBehaviour
 
     public void SaveProductsToFile()
     {
-        string filePath = "Assets/Resources/Products.txt"; // Percorso del file di salvataggio
-        StreamWriter writer = new StreamWriter(filePath, false);  // 'false' per sovrascrivere il file
+        StreamWriter writer = new StreamWriter(filePath, false); // Sovrascrive il file
 
         foreach (string productName in availableProducts)
         {
-            writer.WriteLine(productName);  // Scrive ogni prodotto su una nuova riga
+            writer.WriteLine(productName);
         }
 
-        writer.Close();  // Chiude il file
+        writer.Close();
         Debug.Log("Products saved to Products.txt");
     }
 }
