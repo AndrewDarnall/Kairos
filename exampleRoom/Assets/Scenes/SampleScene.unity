@@ -1049,6 +1049,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1247660961}
     - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: pointerPrefab
+      value: 
+      objectReference: {fileID: 4912674362072615655, guid: 57961d9905a6f534dbceda4253aded5e, type: 3}
+    - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: searchInputField
       value: 
       objectReference: {fileID: 1969289414}

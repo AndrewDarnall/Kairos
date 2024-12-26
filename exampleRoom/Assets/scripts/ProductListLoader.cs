@@ -7,7 +7,6 @@ using System.IO;
 using System.Linq; // Per utilizzare LINQ
 using UnityEngine.EventSystems; // Necessario per usare EventSystem
 
-
 public class ProductListLoader : MonoBehaviour
 {
     public GameObject productEntryPrefab; // Prefab for the button in the menu
@@ -15,6 +14,8 @@ public class ProductListLoader : MonoBehaviour
     public GameObject productPrefab;      // Prefab to instantiate in the scene
     public GameObject productListManager; // Parent GameObject (ProductListManager)
     public GameObject textTagPrefab;      // Prefab per il tag testuale (TextMeshPro)
+    public GameObject pointerPrefab;      // Prefab per il puntatore rosso (sfera o altro oggetto)
+    private GameObject pointerInstance;   // Riferimento all'istanza del puntatore
     private string filePath = "Assets/Resources/Products.txt";
 
     public TMP_InputField searchInputField; // Riferimento al campo di input per la ricerca
@@ -24,7 +25,13 @@ public class ProductListLoader : MonoBehaviour
 
     void Start()
     {
-        // Imposta il riferimento al campo di input (modifica il percorso in base alla tua gerarchia)
+        // Imposta il puntatore una sola volta all'inizio
+        if (pointerPrefab != null)
+        {
+            pointerInstance = Instantiate(pointerPrefab);
+            pointerInstance.SetActive(false); // Lo nascondiamo inizialmente
+        }
+
         searchInputField = GameObject.Find("Canvas/searchText").GetComponent<TMP_InputField>();
         searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
 
@@ -34,19 +41,35 @@ public class ProductListLoader : MonoBehaviour
 
     void Update()
     {
-        // Controlla se un campo di input è attualmente attivo
-        if (IsInputFieldFocused())
-            return;
-
-        HandleDeletion();
-
-        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) // Controlla se Shift è premuto        
+        // Mostra e aggiorna la posizione del puntatore solo se non c'è un campo di input attivo
+        if (!IsInputFieldFocused())
         {
-            if (Input.GetKeyDown(KeyCode.S)) // Controlla se S è premuto
+            UpdatePointerPosition(); // Aggiorna la posizione del puntatore
+
+            HandleDeletion();
+
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) // Controlla se Shift è premuto        
             {
-                SaveProductListManager();
-                SaveProductsToFile();
+                if (Input.GetKeyDown(KeyCode.S)) // Controlla se S è premuto
+                {
+                    SaveProductListManager();
+                    SaveProductsToFile();
+                }
             }
+        }
+    }
+
+    // Metodo che aggiorna la posizione del puntatore
+    private void UpdatePointerPosition()
+    {
+        if (pointerInstance != null)
+        {
+            // Posiziona il puntatore sulla posizione di spawn
+            Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 40f;
+            //spawnPosition.y = 60f;  // Fissa l'altezza a 60 (o la tua altezza desiderata)
+
+            pointerInstance.transform.position = spawnPosition;
+            pointerInstance.SetActive(true); // Mostra il puntatore
         }
     }
 
@@ -110,9 +133,10 @@ public class ProductListLoader : MonoBehaviour
 
     private void SpawnProduct(string productName)
     {
-        Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 1f;
+        Vector3 spawnPosition = pointerInstance.transform.position; // Usa la posizione del puntatore
+        //spawnPosition.y = 60f;  // Fissa l'altezza a 60 (se necessario)
 
-        // Istanzia il prodotto
+        // Istanzia il prodotto alla posizione aggiornata
         GameObject newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity);
         newProduct.name = productName;
         newProduct.transform.SetParent(productListManager.transform);
@@ -122,7 +146,7 @@ public class ProductListLoader : MonoBehaviour
         {
             GameObject textTag = Instantiate(textTagPrefab);
             textTag.transform.SetParent(newProduct.transform);
-            textTag.transform.localPosition = new Vector3(0, 2f, 0);
+            textTag.transform.localPosition = new Vector3(0, 2f, 0); // La posizione del tag rimane relativa al prodotto
             textTag.transform.localScale = Vector3.one * 0.5f;
 
             TextMeshPro textMesh = textTag.GetComponent<TextMeshPro>();
