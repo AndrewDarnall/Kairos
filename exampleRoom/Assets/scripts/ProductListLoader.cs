@@ -5,6 +5,8 @@ using TMPro;
 using UnityEditor; // Solo per l'Editor (PrefabUtility)
 using System.IO;
 using System.Linq; // Per utilizzare LINQ
+using UnityEngine.EventSystems; // Necessario per usare EventSystem
+
 
 public class ProductListLoader : MonoBehaviour
 {
@@ -17,28 +19,34 @@ public class ProductListLoader : MonoBehaviour
 
     public TMP_InputField searchInputField; // Riferimento al campo di input per la ricerca
 
-
     private List<string> availableProducts = new List<string>(); // Lista dei prodotti disponibili
     private string saveFolder = "Assets/SavedPrefabs"; // Cartella di salvataggio
 
     void Start()
     {
         // Imposta il riferimento al campo di input (modifica il percorso in base alla tua gerarchia)
-            searchInputField = GameObject.Find("Canvas/searchText").GetComponent<TMP_InputField>();
-            searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
+        searchInputField = GameObject.Find("Canvas/searchText").GetComponent<TMP_InputField>();
+        searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
 
-            contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
-            LoadProducts();  
+        contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+        LoadProducts();
     }
 
     void Update()
     {
+        // Controlla se un campo di input è attualmente attivo
+        if (IsInputFieldFocused())
+            return;
+
         HandleDeletion();
 
-        if (Input.GetKeyDown(KeyCode.S))
+        if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) // Controlla se Shift è premuto        
         {
-            SaveProductListManager();
-            SaveProductsToFile();
+            if (Input.GetKeyDown(KeyCode.S)) // Controlla se S è premuto
+            {
+                SaveProductListManager();
+                SaveProductsToFile();
+            }
         }
     }
 
@@ -212,7 +220,7 @@ public class ProductListLoader : MonoBehaviour
         UpdateProductListUI(searchText);
     }
 
-// Aggiorna la lista dei prodotti in base al testo di ricerca
+    // Aggiorna la lista dei prodotti in base al testo di ricerca
     private void UpdateProductListUI(string filter = "")
     {
         // Pulisce la UI
@@ -237,4 +245,10 @@ public class ProductListLoader : MonoBehaviour
         }
     }
 
+    // Funzione per verificare se un InputField è attivo
+    private bool IsInputFieldFocused()
+    {
+        // Controlla se un oggetto UI è selezionato e se è un InputField
+        return EventSystem.current.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
+    }
 }

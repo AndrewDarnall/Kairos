@@ -1,13 +1,15 @@
 using UnityEngine;
+using UnityEngine.EventSystems;
+using TMPro; // Per InputField di TextMeshPro
 
 public class DragAndDrop : MonoBehaviour
 {
     private Vector3 offset;
     private float zCoordinate;
     private bool isSelected = false; // Stato se l'oggetto è selezionato per il movimento
-    private bool isDragging = false;  // Stato se si sta trascinando con il mouse
-    private string moveAxis = ""; // Asse selezionato (X, Y, Z)
-    public float moveSpeed = 5f; // Velocità di movimento
+    private bool isDragging = false; // Stato se si sta trascinando con il mouse
+    private string moveAxis = "";    // Asse selezionato (X, Y, Z)
+    public float moveSpeed = 5f;     // Velocità di movimento
 
     // Calcola la posizione del mouse nel mondo
     private Vector3 GetMouseWorldPosition()
@@ -19,6 +21,10 @@ public class DragAndDrop : MonoBehaviour
 
     private void OnMouseDown()
     {
+        // Controlla se il focus è su un InputField
+        if (IsInputFieldFocused())
+            return;
+
         // Calcola la distanza Z dalla telecamera
         zCoordinate = Camera.main.WorldToScreenPoint(transform.position).z;
 
@@ -43,6 +49,10 @@ public class DragAndDrop : MonoBehaviour
 
     private void Update()
     {
+        // Controlla se il focus è su un InputField
+        if (IsInputFieldFocused())
+            return;
+
         // Se si sta trascinando, sposta l'oggetto con il mouse
         if (isDragging)
         {
@@ -55,21 +65,20 @@ public class DragAndDrop : MonoBehaviour
             // Gestione della selezione dell'asse
             if (Input.GetKey(KeyCode.X))
             {
-                moveAxis = "X";  // Se è premuto X, si può muovere lungo X
+                moveAxis = "X"; // Se è premuto X, si può muovere lungo X
             }
             else if (Input.GetKey(KeyCode.Y))
             {
-                moveAxis = "Y";  // Se è premuto Y, si può muovere lungo Y
+                moveAxis = "Y"; // Se è premuto Y, si può muovere lungo Y
             }
             else if (Input.GetKey(KeyCode.Z))
             {
-                moveAxis = "Z";  // Se è premuto Z, si può muovere lungo Z
+                moveAxis = "Z"; // Se è premuto Z, si può muovere lungo Z
             }
 
             // Movimento lungo l'asse scelto
             if (moveAxis == "X")
             {
-                // Freccia su = aumento su X, freccia giù = diminuzione su X
                 if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
                 {
                     transform.position += Vector3.right * moveSpeed * Time.deltaTime;
@@ -81,7 +90,6 @@ public class DragAndDrop : MonoBehaviour
             }
             else if (moveAxis == "Y")
             {
-                // Freccia su = aumento su Y, freccia giù = diminuzione su Y
                 if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
                 {
                     transform.position += Vector3.up * moveSpeed * Time.deltaTime;
@@ -93,7 +101,6 @@ public class DragAndDrop : MonoBehaviour
             }
             else if (moveAxis == "Z")
             {
-                // Freccia su = aumento su Z, freccia giù = diminuzione su Z
                 if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
                 {
                     transform.position += Vector3.forward * moveSpeed * Time.deltaTime;
@@ -119,5 +126,13 @@ public class DragAndDrop : MonoBehaviour
                 moveAxis = ""; // Reset dell'asse selezionato
             }
         }
+    }
+
+    // Funzione per verificare se un InputField è attivo
+    private bool IsInputFieldFocused()
+    {
+        // Controlla se un oggetto UI è selezionato e se è un InputField
+        return EventSystem.current.currentSelectedGameObject != null &&
+               EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 }

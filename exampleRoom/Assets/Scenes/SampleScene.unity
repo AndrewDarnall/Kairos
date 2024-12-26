@@ -179,7 +179,7 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: 'Press S : Save Product List'
+  m_text: 'CTRL+S : Save Product List'
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2180264, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -1044,6 +1044,14 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: contentPanel
+      value: 
+      objectReference: {fileID: 1247660961}
+    - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: searchInputField
+      value: 
+      objectReference: {fileID: 1969289414}
     - target: {fileID: 7796855569419658290, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: m_Name
       value: ProductListManager
@@ -1094,6 +1102,12 @@ PrefabInstance:
     m_AddedGameObjects: []
     m_AddedComponents:
     - targetCorrespondingSourceObject: {fileID: 8830899616407287845, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 9144510374457691432, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      insertIndex: -1
+      addedObject: {fileID: 0}
+    - targetCorrespondingSourceObject: {fileID: 8244247422926844775, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}

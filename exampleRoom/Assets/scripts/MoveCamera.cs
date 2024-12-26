@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro; // Namespace necessario per TextMeshPro
+using UnityEngine.EventSystems; // Per gestire gli input UI
 
 public class moveCamera : MonoBehaviour
 {
@@ -29,6 +30,10 @@ public class moveCamera : MonoBehaviour
 
     void Update()
     {
+        // Controllo se un InputField è attivo per bloccare il movimento della telecamera
+        if (IsInputFieldFocused())
+            return;
+
         // Controllo per attivare/disattivare il movimento con il tasto C
         if (Input.GetKeyDown(KeyCode.C))
         {
@@ -144,5 +149,13 @@ public class moveCamera : MonoBehaviour
         {
             statusText.text = isActive ? "Camera Movement: ON" : "Camera Movement: OFF";
         }
+    }
+
+    // Funzione per verificare se un InputField è attivo
+    private bool IsInputFieldFocused()
+    {
+        // Controlla se un oggetto UI è selezionato e se è un InputField
+        return EventSystem.current.currentSelectedGameObject != null &&
+               EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
 }
