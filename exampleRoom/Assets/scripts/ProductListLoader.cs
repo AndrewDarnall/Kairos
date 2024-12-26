@@ -4,6 +4,7 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEditor; // Solo per l'Editor (PrefabUtility)
 using System.IO;
+using System.Linq; // Per utilizzare LINQ
 
 public class ProductListLoader : MonoBehaviour
 {
@@ -14,13 +15,20 @@ public class ProductListLoader : MonoBehaviour
     public GameObject textTagPrefab;      // Prefab per il tag testuale (TextMeshPro)
     private string filePath = "Assets/Resources/Products.txt";
 
+    public TMP_InputField searchInputField; // Riferimento al campo di input per la ricerca
+
+
     private List<string> availableProducts = new List<string>(); // Lista dei prodotti disponibili
     private string saveFolder = "Assets/SavedPrefabs"; // Cartella di salvataggio
 
     void Start()
     {
-        contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
-        LoadProducts();
+        // Imposta il riferimento al campo di input (modifica il percorso in base alla tua gerarchia)
+            searchInputField = GameObject.Find("Canvas/searchText").GetComponent<TMP_InputField>();
+            searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
+
+            contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+            LoadProducts();  
     }
 
     void Update()
@@ -197,4 +205,36 @@ public class ProductListLoader : MonoBehaviour
         writer.Close();
         Debug.Log("Products saved to Products.txt");
     }
+
+    // Metodo chiamato quando il testo del campo di ricerca cambia
+    private void OnSearchValueChanged(string searchText)
+    {
+        UpdateProductListUI(searchText);
+    }
+
+// Aggiorna la lista dei prodotti in base al testo di ricerca
+    private void UpdateProductListUI(string filter = "")
+    {
+        // Pulisce la UI
+        foreach (Transform child in contentPanel)
+        {
+            Destroy(child.gameObject);
+        }
+
+        // Filtra i prodotti disponibili in base al testo inserito
+        IEnumerable<string> filteredProducts = availableProducts;
+
+        if (!string.IsNullOrEmpty(filter))
+        {
+            filteredProducts = availableProducts
+                .Where(product => product.ToLower().Contains(filter.ToLower()));
+        }
+
+        // Aggiunge i prodotti filtrati nella UI
+        foreach (string productName in filteredProducts)
+        {
+            AddProductToUI(productName);
+        }
+    }
+
 }

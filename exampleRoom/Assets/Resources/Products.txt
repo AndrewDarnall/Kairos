@@ -1,5 +1,4 @@
 Uova
-Pasta
 Riso
 Olio d'oliva
 Zucchero
@@ -17,3 +16,4 @@ Frutta mista
 Yogurt
 Caffè
 Pane
+Latte
