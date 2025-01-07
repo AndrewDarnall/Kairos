@@ -1,27 +1,27 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using TMPro; // Namespace necessario per TextMeshPro
-using UnityEngine.EventSystems; // Per gestire gli input UI
+using TMPro; 
+using UnityEngine.EventSystems; 
 
-public class moveCamera : MonoBehaviour
+public class MoveCamera : MonoBehaviour
 {
     float rotationX = 0f;
     float rotationY = 0f;
     public float sensitivity = 1.5f;
-    public float moveSpeed = 5f; // Velocità costante
+    public float moveSpeed = 5f; // Constant speed
 
-    private bool isActive = false; // Stato del movimento (attivo o disattivo)
-    private bool isTopView = false; // Stato della vista dall'alto
+    private bool isActive = false; // Movement state (active or inactive)
+    private bool isTopView = false; // Top view state
 
-    public TMP_Text statusText; // Riferimento al componente TMP_Text per l'avviso
+    public TMP_Text statusText; // Reference to the TMP_Text component for the status message
 
-    private Vector3 previousPosition; // Posizione precedente della telecamera
-    private Quaternion previousRotation; // Rotazione precedente della telecamera
+    private Vector3 previousPosition; // Previous camera position
+    private Quaternion previousRotation; // Previous camera rotation
 
-    // Altezza specifica per la vista dall'alto
+    // Specific height for the top view
     public float topViewHeight = 50f;
-    public float heightAdjustSpeed = 10f; // Velocità di aggiustamento dell'altezza
+    public float heightAdjustSpeed = 10f; // Height adjustment speed
 
     void Start()
     {
@@ -30,18 +30,18 @@ public class moveCamera : MonoBehaviour
 
     void Update()
     {
-        // Controllo se un InputField è attivo per bloccare il movimento della telecamera
+        // Check if an InputField is active to block camera movement
         if (IsInputFieldFocused())
             return;
 
-        // Controllo per attivare/disattivare il movimento con il tasto C
+        // Check to activate/deactivate movement with the C key
         if (Input.GetKeyDown(KeyCode.C))
         {
-            isActive = !isActive; // Alterna lo stato
-            UpdateStatusText();  // Aggiorna il testo quando lo stato cambia
+            isActive = !isActive; // Toggle the state
+            UpdateStatusText();  // Update the text when the state changes
         }
 
-        // Controllo per attivare/disattivare la vista dall'alto con il tasto U
+        // Check to activate/deactivate the top view with the U key
         if (Input.GetKeyDown(KeyCode.U))
         {
             ToggleTopView();
@@ -56,93 +56,93 @@ public class moveCamera : MonoBehaviour
 
         if (!isActive)
         {
-            Cursor.lockState = CursorLockMode.None; // Rilascia il cursore
-            return; // Se inattivo, esci dalla funzione Update
+            Cursor.lockState = CursorLockMode.None; // Release the cursor
+            return; // If inactive, exit the Update function
         }
 
-        Cursor.lockState = CursorLockMode.Locked; // Blocca il cursore
+        Cursor.lockState = CursorLockMode.Locked; // Lock the cursor
 
-        // Movimento della telecamera con il mouse
+        // Camera movement with the mouse
         rotationY += Input.GetAxis("Mouse X") * sensitivity;
         rotationX += Input.GetAxis("Mouse Y") * sensitivity;
-        rotationX = Mathf.Clamp(rotationX, -90f, 90f); // Limita la rotazione verticale
+        rotationX = Mathf.Clamp(rotationX, -90f, 90f); // Limit vertical rotation
 
         transform.localEulerAngles = new Vector3(-rotationX, rotationY, 0);
 
-        // Movimento della telecamera con WASD
+        // Camera movement with WASD
         Vector3 move = new Vector3(Input.GetAxis("Horizontal"), 0, Input.GetAxis("Vertical"));
-        move = transform.TransformDirection(move); // Converte il movimento relativo alla direzione della telecamera
+        move = transform.TransformDirection(move); // Convert movement relative to the camera direction
 
-        // Muovi la telecamera con la velocità fissa
+        // Move the camera with a fixed speed
         transform.position += move * moveSpeed * Time.deltaTime;
     }
 
-    // Metodo per attivare/disattivare la vista dall'alto
+    // Method to activate/deactivate the top view
     void ToggleTopView()
     {
         if (!isTopView)
         {
-            // Salva la posizione e rotazione attuali
+            // Save the current position and rotation
             previousPosition = transform.position;
             previousRotation = transform.rotation;
 
-            // Imposta la vista dall'alto: posizione più alta e centrata
+            // Set the top view: higher position and centered
             transform.position = new Vector3(transform.position.x, topViewHeight, transform.position.z);
-            transform.rotation = Quaternion.Euler(90f, 0f, 0f); // Guarda verso il basso
+            transform.rotation = Quaternion.Euler(90f, 0f, 0f); // Look downwards
         }
         else
         {
-            // Ripristina posizione e rotazione precedenti
+            // Restore the previous position and rotation
             transform.position = previousPosition;
             transform.rotation = previousRotation;
         }
 
-        isTopView = !isTopView; // Cambia stato
+        isTopView = !isTopView; // Change state
     }
 
-    // Movimento durante la vista dall'alto
+    // Movement during the top view
     void HandleTopViewMovement()
     {
         Vector3 move = Vector3.zero;
 
-        if (Input.GetKey(KeyCode.W)) // Movimento in avanti (asse Z)
+        if (Input.GetKey(KeyCode.W)) // Move forward (Z axis)
         {
             move.z = 1;
         }
-        else if (Input.GetKey(KeyCode.S)) // Movimento indietro
+        else if (Input.GetKey(KeyCode.S)) // Move backward
         {
             move.z = -1;
         }
-        else if (Input.GetKey(KeyCode.A)) // Movimento a sinistra (asse X)
+        else if (Input.GetKey(KeyCode.A)) // Move left (X axis)
         {
             move.x = -1;
         }
-        else if (Input.GetKey(KeyCode.D)) // Movimento a destra
+        else if (Input.GetKey(KeyCode.D)) // Move right
         {
             move.x = 1;
         }
 
-        // Normalizza il movimento per evitare diagonali
+        // Normalize the movement to avoid diagonals
         move = move.normalized;
 
-        // Muovi la telecamera solo negli assi X e Z
+        // Move the camera only on the X and Z axes
         transform.position += new Vector3(move.x, 0, move.z) * moveSpeed * Time.deltaTime;
     }
 
-    // Aggiustamento dell'altezza con le frecce su/giù
+    // Height adjustment with the up/down arrows
     void HandleHeightAdjustment()
     {
-        if (Input.GetKey(KeyCode.UpArrow)) // Freccia su: aumenta l'altezza
+        if (Input.GetKey(KeyCode.UpArrow)) // Up arrow: increase height
         {
             transform.position += Vector3.up * heightAdjustSpeed * Time.deltaTime;
         }
-        else if (Input.GetKey(KeyCode.DownArrow)) // Freccia giù: diminuisce l'altezza
+        else if (Input.GetKey(KeyCode.DownArrow)) // Down arrow: decrease height
         {
             transform.position += Vector3.down * heightAdjustSpeed * Time.deltaTime;
         }
     }
 
-    // Metodo per aggiornare il testo dello stato
+    // Method to update the status text
     void UpdateStatusText()
     {
         if (statusText != null)
@@ -151,10 +151,10 @@ public class moveCamera : MonoBehaviour
         }
     }
 
-    // Funzione per verificare se un InputField è attivo
+    // Function to check if an InputField is active
     private bool IsInputFieldFocused()
     {
-        // Controlla se un oggetto UI è selezionato e se è un InputField
+        // Check if a UI object is selected and if it is an InputField
         return EventSystem.current.currentSelectedGameObject != null &&
                EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }

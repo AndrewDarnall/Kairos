@@ -1,156 +1,134 @@
 using System.Collections.Generic;
+using System.IO;
+using System.Linq;
 using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
-using UnityEditor; // Solo per l'Editor (PrefabUtility)
-using System.IO;
-using System.Linq; // Per utilizzare LINQ
-using UnityEngine.EventSystems; // Necessario per usare EventSystem
+using UnityEditor;
+using UnityEngine.EventSystems;
 
 public class ProductListLoader : MonoBehaviour
 {
-    public GameObject productEntryPrefab; // Prefab for the button in the menu
-    public Transform contentPanel;        // Content of the Scroll View
-    public GameObject productPrefab;      // Prefab to instantiate in the scene
-    public GameObject productListManager; // Parent GameObject (ProductListManager)
-    public GameObject textTagPrefab;      // Prefab per il tag testuale (TextMeshPro)
-    public GameObject pointerPrefab;      // Prefab per il puntatore rosso (sfera o altro oggetto)
-    private GameObject pointerInstance;   // Riferimento all'istanza del puntatore
-    private string filePath = "Assets/Resources/Products.txt";
+    [Header("UI Elements")]
+    public GameObject productEntryPrefab;
+    public Transform contentPanel;
+    public TMP_InputField searchInputField;
 
-    public TMP_InputField searchInputField; // Riferimento al campo di input per la ricerca
+    [Header("Prefabs")]
+    public GameObject productPrefab;
+    public GameObject textTagPrefab;
+    public GameObject pointerPrefab;
 
-    private List<string> availableProducts = new List<string>(); // Lista dei prodotti disponibili
-    private string saveFolder = "Assets/SavedPrefabs"; // Cartella di salvataggio
+    [Header("References")]
+    public GameObject productListManager;
 
-    void Start()
+    private List<string> availableProducts = new();
+    private GameObject pointerInstance;
+    private const string FilePath = "Assets/Resources/Products.txt";
+    private const string SaveFolder = "Assets/SavedPrefabs";
+
+    private void Start()
     {
-        // Imposta il puntatore una sola volta all'inizio
-        if (pointerPrefab != null)
-        {
-            pointerInstance = Instantiate(pointerPrefab);
-            pointerInstance.SetActive(false); // Lo nascondiamo inizialmente
-        }
-
-        searchInputField = GameObject.Find("Canvas/searchText").GetComponent<TMP_InputField>();
-        searchInputField.onValueChanged.AddListener(OnSearchValueChanged);
-
-        contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+        InitializePointer();
+        InitializeUI();
         LoadProducts();
     }
 
-    void Update()
+    private void Update()
     {
-        // Mostra e aggiorna la posizione del puntatore solo se non c'è un campo di input attivo
         if (!IsInputFieldFocused())
         {
-            UpdatePointerPosition(); // Aggiorna la posizione del puntatore
+            UpdatePointerPosition();
+            HandleProductDeletion();
 
-            HandleDeletion();
-
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) // Controlla se Shift è premuto        
-            {
-                if (Input.GetKeyDown(KeyCode.S)) // Controlla se S è premuto
-                {
-                    SaveProductListManager();
-                    SaveProductsToFile();
-                }
-            }
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
+                if (Input.GetKeyDown(KeyCode.S)) SaveAll();
         }
     }
 
-    // Metodo che aggiorna la posizione del puntatore
-    private void UpdatePointerPosition()
+    private void InitializePointer()
     {
-        if (pointerInstance != null)
+        if (pointerPrefab)
         {
-            // Posiziona il puntatore sulla posizione di spawn
-            Vector3 spawnPosition = Camera.main.transform.position + Camera.main.transform.forward * 40f;
-            //spawnPosition.y = 60f;  // Fissa l'altezza a 60 (o la tua altezza desiderata)
-
-            pointerInstance.transform.position = spawnPosition;
-            pointerInstance.SetActive(true); // Mostra il puntatore
+            pointerInstance = Instantiate(pointerPrefab);
+            pointerInstance.SetActive(false);
         }
     }
 
-    public void LoadProducts()
+    private void InitializeUI()
     {
-        TextAsset file = Resources.Load<TextAsset>("Products");
+        searchInputField.onValueChanged.AddListener(UpdateProductListUI);
+        contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+    }
+
+    private void LoadProducts()
+    {
+        var file = Resources.Load<TextAsset>("Products");
         if (file == null)
         {
             Debug.LogError("Products.txt not found in Resources.");
             return;
         }
 
-        string[] productNames = file.text.Split('\n');
-
-        foreach (string productName in productNames)
-        {
-            string trimmedName = productName.Trim();
-            if (!string.IsNullOrWhiteSpace(trimmedName) && !availableProducts.Contains(trimmedName))
-            {
-                availableProducts.Add(trimmedName);
-            }
-        }
+        availableProducts = file.text
+            .Split('\n')
+            .Select(p => p.Trim())
+            .Where(p => !string.IsNullOrWhiteSpace(p))
+            .Distinct()
+            .ToList();
 
         UpdateProductListUI();
     }
 
-    private void UpdateProductListUI()
+    private void UpdateProductListUI(string filter = "")
     {
-        // Pulisce la UI
+        // Rimuove tutti i figli esistenti in modo sicuro
         foreach (Transform child in contentPanel)
         {
-            Destroy(child.gameObject);
+            if (child != null && child.gameObject != null)
+                Destroy(child.gameObject);
         }
 
-        // Aggiunge i prodotti disponibili nella UI
-        foreach (string productName in availableProducts)
-        {
-            AddProductToUI(productName);
-        }
+        availableProducts
+            .Where(product => product.ToLower().Contains(filter.ToLower()))
+            .ToList()
+            .ForEach(AddProductToUI);
     }
 
     private void AddProductToUI(string productName)
     {
-        GameObject newEntry = Instantiate(productEntryPrefab, contentPanel);
+        var newEntry = Instantiate(productEntryPrefab, contentPanel);
+        var textComponent = newEntry.GetComponentInChildren<TextMeshProUGUI>();
 
-        TextMeshProUGUI textComponent = newEntry.GetComponentInChildren<TextMeshProUGUI>();
         if (textComponent != null)
-        {
             textComponent.text = productName;
-        }
 
-        Button button = newEntry.GetComponent<Button>();
+        var button = newEntry.GetComponent<Button>();
         if (button != null)
-        {
-            button.onClick.RemoveAllListeners();
             button.onClick.AddListener(() => SpawnProduct(productName));
-        }
 
         newEntry.name = productName;
     }
 
     private void SpawnProduct(string productName)
     {
-        Vector3 spawnPosition = pointerInstance.transform.position; // Usa la posizione del puntatore
-        //spawnPosition.y = 60f;  // Fissa l'altezza a 60 (se necessario)
-
-        // Istanzia il prodotto alla posizione aggiornata
-        GameObject newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity);
-        newProduct.name = productName;
-        newProduct.transform.SetParent(productListManager.transform);
-
-        // Aggiunge il "tag testuale" sopra il prodotto
-        if (textTagPrefab != null)
+        if (pointerInstance == null || !pointerInstance)
         {
-            GameObject textTag = Instantiate(textTagPrefab);
-            textTag.transform.SetParent(newProduct.transform);
-            textTag.transform.localPosition = new Vector3(0, 2f, 0); // La posizione del tag rimane relativa al prodotto
-            textTag.transform.localScale = Vector3.one * 0.5f;
+            Debug.LogWarning("Pointer instance is missing or destroyed.");
+            return;
+        }
 
-            TextMeshPro textMesh = textTag.GetComponent<TextMeshPro>();
-            if (textMesh != null)
+        var spawnPosition = pointerInstance.transform.position;
+        var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity, productListManager.transform);
+        newProduct.name = productName;
+
+        if (textTagPrefab)
+        {
+            var textTag = Instantiate(textTagPrefab, newProduct.transform);
+            textTag.transform.localPosition = Vector3.up * 2f;
+            var textMesh = textTag.GetComponent<TextMeshPro>();
+
+            if (textMesh)
             {
                 textMesh.text = productName;
                 textMesh.alignment = TextAlignmentOptions.Center;
@@ -159,120 +137,97 @@ public class ProductListLoader : MonoBehaviour
             }
         }
 
-        // Rimuove il prodotto dalla lista disponibile
         availableProducts.Remove(productName);
-
-        // Aggiorna l'interfaccia utente
         UpdateProductListUI();
-        Debug.Log($"Spawned product '{productName}' with tag and removed from the UI list.");
     }
 
-    private void HandleDeletion()
+    private void UpdatePointerPosition()
     {
-        if (Input.GetKey(KeyCode.D)) // Tiene premuto D
+        if (pointerInstance)
         {
-            if (Input.GetMouseButtonDown(0)) // Click sinistro
-            {
-                Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
-                RaycastHit hit;
+            pointerInstance.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 40f;
+            pointerInstance.SetActive(true);
+        }
+    }
 
-                if (Physics.Raycast(ray, out hit))
+    private void HandleProductDeletion()
+    {
+        if (Input.GetKey(KeyCode.D) && Input.GetMouseButtonDown(0))
+        {
+            Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
+            if (Physics.Raycast(ray, out var hit))
+            {
+                GameObject clickedObject = hit.collider.gameObject;
+
+                // Controlla se l'oggetto esiste e non è già stato distrutto
+                if (clickedObject != null)
                 {
-                    GameObject clickedObject = hit.collider.gameObject;
                     RemoveProduct(clickedObject);
                 }
+                else
+                {
+                    Debug.LogWarning("The object you tried to remove does not exist or has already been destroyed.");
+                }
+            }
+            else
+            {
+                Debug.LogWarning("No object was detected under the mouse cursor.");
             }
         }
     }
 
     private void RemoveProduct(GameObject product)
     {
+        if (product == null || !product)
+        {
+            Debug.LogWarning("The product you are trying to remove no longer exists.");
+            return;
+        }
+
         string productName = product.name;
 
-        Destroy(product);
-
-        // Riaggiunge il prodotto nella lista disponibile
-        if (!availableProducts.Contains(productName))
+        // Controlla se il nome del prodotto è valido e non è già nella lista
+        if (!string.IsNullOrEmpty(productName) && !availableProducts.Contains(productName))
         {
             availableProducts.Add(productName);
+            Debug.Log($"Product '{productName}' added back to the available list.");
         }
 
+        Destroy(product);
         UpdateProductListUI();
-        Debug.Log($"Removed product '{productName}' and added it back to the UI list.");
+        Debug.Log($"Product '{productName}' has been removed.");
     }
 
-    void SaveProductListManager()
+    private void SaveAll()
     {
-        // Crea la cartella di salvataggio se non esiste
-        if (!Directory.Exists(saveFolder))
-        {
-            Directory.CreateDirectory(saveFolder);
-            Debug.Log($"Created save folder: {saveFolder}");
-        }
-
-        // Genera il percorso del prefab
-        string prefabPath = Path.Combine(saveFolder, productListManager.name + ".prefab");
-
-        // Salva il prefab
-        GameObject prefab = PrefabUtility.SaveAsPrefabAsset(productListManager, prefabPath);
-        if (prefab != null)
-        {
-            Debug.Log($"Prefab saved successfully at: {prefabPath}");
-        }
-        else
-        {
-            Debug.LogError("Failed to save prefab!");
-        }
+        SaveProductListManager();
+        SaveProductsToFile();
     }
 
-    public void SaveProductsToFile()
+    private void SaveProductListManager()
     {
-        StreamWriter writer = new StreamWriter(filePath, false); // Sovrascrive il file
+        if (!Directory.Exists(SaveFolder))
+            Directory.CreateDirectory(SaveFolder);
 
-        foreach (string productName in availableProducts)
-        {
-            writer.WriteLine(productName);
-        }
+        var prefabPath = Path.Combine(SaveFolder, $"{productListManager.name}.prefab");
+        var prefab = PrefabUtility.SaveAsPrefabAsset(productListManager, prefabPath);
+        Debug.Log(prefab ? $"Prefab saved at {prefabPath}" : "Failed to save prefab!");
+    }
 
-        writer.Close();
+    private void SaveProductsToFile()
+    {
+        File.WriteAllLines(FilePath, availableProducts);
         Debug.Log("Products saved to Products.txt");
     }
 
-    // Metodo chiamato quando il testo del campo di ricerca cambia
-    private void OnSearchValueChanged(string searchText)
-    {
-        UpdateProductListUI(searchText);
-    }
-
-    // Aggiorna la lista dei prodotti in base al testo di ricerca
-    private void UpdateProductListUI(string filter = "")
-    {
-        // Pulisce la UI
-        foreach (Transform child in contentPanel)
-        {
-            Destroy(child.gameObject);
-        }
-
-        // Filtra i prodotti disponibili in base al testo inserito
-        IEnumerable<string> filteredProducts = availableProducts;
-
-        if (!string.IsNullOrEmpty(filter))
-        {
-            filteredProducts = availableProducts
-                .Where(product => product.ToLower().Contains(filter.ToLower()));
-        }
-
-        // Aggiunge i prodotti filtrati nella UI
-        foreach (string productName in filteredProducts)
-        {
-            AddProductToUI(productName);
-        }
-    }
-
-    // Funzione per verificare se un InputField è attivo
     private bool IsInputFieldFocused()
     {
-        // Controlla se un oggetto UI è selezionato e se è un InputField
-        return EventSystem.current.currentSelectedGameObject != null && EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
+        var selectedObject = EventSystem.current.currentSelectedGameObject;
+
+        if (selectedObject == null || !selectedObject)
+            return false;
+
+        var inputField = selectedObject.GetComponent<TMP_InputField>();
+        return inputField != null;
     }
 }

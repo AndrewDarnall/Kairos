@@ -1,40 +1,40 @@
 using UnityEngine;
 using UnityEngine.EventSystems;
-using TMPro; // Per InputField di TextMeshPro
+using TMPro; // For TextMeshPro InputField
 
 public class DragAndDrop : MonoBehaviour
 {
     private Vector3 offset;
     private float zCoordinate;
-    private bool isSelected = false; // Stato se l'oggetto è selezionato per il movimento
-    private bool isDragging = false; // Stato se si sta trascinando con il mouse
-    private string moveAxis = "";    // Asse selezionato (X, Y, Z)
-    public float moveSpeed = 5f;     // Velocità di movimento
+    private bool isSelected = false; // State if the object is selected for movement
+    private bool isDragging = false; // State if dragging with the mouse
+    private string moveAxis = "";    // Selected axis (X, Y, Z)
+    public float moveSpeed = 5f;     // Movement speed
 
-    // Calcola la posizione del mouse nel mondo
+    // Calculate the mouse position in the world
     private Vector3 GetMouseWorldPosition()
     {
         Vector3 mouseScreenPosition = Input.mousePosition;
-        mouseScreenPosition.z = zCoordinate; // Mantiene la distanza dalla telecamera
+        mouseScreenPosition.z = zCoordinate; // Maintain the distance from the camera
         return Camera.main.ScreenToWorldPoint(mouseScreenPosition);
     }
 
     private void OnMouseDown()
     {
-        // Controlla se il focus è su un InputField
+        // Check if the focus is on an InputField
         if (IsInputFieldFocused())
             return;
 
-        // Calcola la distanza Z dalla telecamera
+        // Calculate the Z distance from the camera
         zCoordinate = Camera.main.WorldToScreenPoint(transform.position).z;
 
-        // Calcola l'offset tra la posizione dell'oggetto e quella del mouse
+        // Calculate the offset between the object's position and the mouse position
         offset = transform.position - GetMouseWorldPosition();
 
-        // Se il mouse è stato cliccato sull'oggetto, inizia il drag
+        // If the mouse is clicked on the object, start dragging
         isDragging = true;
 
-        // Se non è già selezionato, abilita il movimento
+        // If not already selected, enable movement
         if (!isSelected)
         {
             isSelected = true;
@@ -43,95 +43,95 @@ public class DragAndDrop : MonoBehaviour
 
     private void OnMouseUp()
     {
-        // Quando rilasci il click del mouse, ferma il drag
+        // When the mouse click is released, stop dragging
         isDragging = false;
     }
 
     private void Update()
     {
-        // Controlla se il focus è su un InputField
+        // Check if the focus is on an InputField
         if (IsInputFieldFocused())
             return;
 
-        // Se si sta trascinando, sposta l'oggetto con il mouse
+        // If dragging, move the object with the mouse
         if (isDragging)
         {
             transform.position = GetMouseWorldPosition() + offset;
         }
 
-        // Movimento con tasti solo se l'oggetto è selezionato
+        // Movement with keys only if the object is selected
         if (isSelected && !isDragging)
         {
-            // Gestione della selezione dell'asse
+            // Axis selection management
             if (Input.GetKey(KeyCode.X))
             {
-                moveAxis = "X"; // Se è premuto X, si può muovere lungo X
+                moveAxis = "X"; // If X is pressed, move along X
             }
             else if (Input.GetKey(KeyCode.Y))
             {
-                moveAxis = "Y"; // Se è premuto Y, si può muovere lungo Y
+                moveAxis = "Y"; // If Y is pressed, move along Y
             }
             else if (Input.GetKey(KeyCode.Z))
             {
-                moveAxis = "Z"; // Se è premuto Z, si può muovere lungo Z
+                moveAxis = "Z"; // If Z is pressed, move along Z
             }
 
-            // Movimento lungo l'asse scelto
+            // Movement along the selected axis
             if (moveAxis == "X")
             {
-                if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
+                if (Input.GetKey(KeyCode.UpArrow)) // Up arrow
                 {
                     transform.position += Vector3.right * moveSpeed * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.DownArrow)) // Freccia giù
+                else if (Input.GetKey(KeyCode.DownArrow)) // Down arrow
                 {
                     transform.position -= Vector3.right * moveSpeed * Time.deltaTime;
                 }
             }
             else if (moveAxis == "Y")
             {
-                if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
+                if (Input.GetKey(KeyCode.UpArrow)) // Up arrow
                 {
                     transform.position += Vector3.up * moveSpeed * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.DownArrow)) // Freccia giù
+                else if (Input.GetKey(KeyCode.DownArrow)) // Down arrow
                 {
                     transform.position -= Vector3.up * moveSpeed * Time.deltaTime;
                 }
             }
             else if (moveAxis == "Z")
             {
-                if (Input.GetKey(KeyCode.UpArrow)) // Freccia su
+                if (Input.GetKey(KeyCode.UpArrow)) // Up arrow
                 {
                     transform.position += Vector3.forward * moveSpeed * Time.deltaTime;
                 }
-                else if (Input.GetKey(KeyCode.DownArrow)) // Freccia giù
+                else if (Input.GetKey(KeyCode.DownArrow)) // Down arrow
                 {
                     transform.position -= Vector3.forward * moveSpeed * Time.deltaTime;
                 }
             }
         }
 
-        // Controlla se clicco al di fuori dell'oggetto per disabilitare il movimento
+        // Check if clicking outside the object to disable movement
         if (isSelected && !isDragging && Input.GetMouseButtonDown(0))
         {
-            // Raycast per determinare se clicco fuori dall'oggetto
+            // Raycast to determine if clicking outside the object
             Ray ray = Camera.main.ScreenPointToRay(Input.mousePosition);
             RaycastHit hit;
 
             if (!Physics.Raycast(ray, out hit))
             {
-                // Se non colpisce l'oggetto, disabilita il movimento
+                // If it doesn't hit the object, disable movement
                 isSelected = false;
-                moveAxis = ""; // Reset dell'asse selezionato
+                moveAxis = ""; // Reset the selected axis
             }
         }
     }
 
-    // Funzione per verificare se un InputField è attivo
+    // Function to check if an InputField is active
     private bool IsInputFieldFocused()
     {
-        // Controlla se un oggetto UI è selezionato e se è un InputField
+        // Check if a UI object is selected and if it is an InputField
         return EventSystem.current.currentSelectedGameObject != null &&
                EventSystem.current.currentSelectedGameObject.GetComponent<TMP_InputField>() != null;
     }
