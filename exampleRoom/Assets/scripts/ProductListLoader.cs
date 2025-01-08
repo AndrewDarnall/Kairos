@@ -43,9 +43,10 @@ public class ProductListLoader : MonoBehaviour
             UpdatePointerPosition();
             HandleProductDeletion();
 
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-            if (Input.GetKeyDown(KeyCode.S)) 
-                SaveAll();
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) 
+            {
+                if (Input.GetKeyDown(KeyCode.S)) SaveAll();
+            }
         }
     }
 
