@@ -13,6 +13,7 @@ public class ProductListLoader : MonoBehaviour
     public GameObject productEntryPrefab;
     public Transform contentPanel;
     public TMP_InputField searchInputField;
+    public Button activeProductFilterButton; 
 
     [Header("Prefabs")]
     public GameObject productPrefab;
@@ -27,7 +28,8 @@ public class ProductListLoader : MonoBehaviour
     private GameObject pointerInstance;
     private const string FilePath = "Assets/Resources/Products.txt";
     private const string SaveFolder = "Assets/SavedPrefabs";
-    private const float SpawnHeight = 70.0f;
+
+    private bool showOnlySpawned = false; // Stato del filtro
 
     private void Start()
     {
@@ -43,9 +45,11 @@ public class ProductListLoader : MonoBehaviour
             UpdatePointerPosition();
             HandleProductDeletion();
 
-            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift)) 
+            // Salva tutti i dati quando si preme Shift + S
+            if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
             {
-                if (Input.GetKeyDown(KeyCode.S)) SaveAll();
+                if (Input.GetKeyDown(KeyCode.S))
+                    SaveAll();
             }
         }
     }
@@ -63,6 +67,18 @@ public class ProductListLoader : MonoBehaviour
     {
         searchInputField.onValueChanged.AddListener(UpdateProductListUI);
         contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+
+        // Collega l'evento al pulsante di filtro
+        if (activeProductFilterButton != null)
+        {
+            activeProductFilterButton.onClick.AddListener(ToggleFilter);
+        }
+    }
+
+    private void ToggleFilter()
+    {
+        showOnlySpawned = !showOnlySpawned; // Cambia stato del filtro
+        UpdateProductListUI(searchInputField.text); // Aggiorna la lista
     }
 
     private void LoadProducts()
@@ -86,16 +102,26 @@ public class ProductListLoader : MonoBehaviour
 
     private void UpdateProductListUI(string filter = "")
     {
+        // Rimuove tutti i figli esistenti in modo sicuro
         foreach (Transform child in contentPanel)
         {
             if (child != null && child.gameObject != null)
                 Destroy(child.gameObject);
         }
 
-        availableProducts
+        var filteredProducts = availableProducts
             .Where(product => product.ToLower().Contains(filter.ToLower()))
-            .ToList()
-            .ForEach(AddProductToUI);
+            .ToList();
+
+        if (showOnlySpawned)
+        {
+            // Filtra solo i prodotti già spawnati
+            filteredProducts = filteredProducts
+                .Where(product => spawnedProducts.ContainsKey(product))
+                .ToList();
+        }
+
+        filteredProducts.ForEach(AddProductToUI);
     }
 
     private void AddProductToUI(string productName)
@@ -108,23 +134,33 @@ public class ProductListLoader : MonoBehaviour
 
         var button = newEntry.GetComponent<Button>();
         if (button != null)
-        {
-            if (spawnedProducts.ContainsKey(productName))
-            {
-                button.onClick.AddListener(() => FocusOnProduct(productName));
-                button.GetComponent<Image>().color = Color.green;
-            }
-            else
-            {
-                button.onClick.AddListener(() => SpawnProduct(productName));
-                button.GetComponent<Image>().color = Color.yellow;
-            }
-        }
+            button.onClick.AddListener(() => HandleProductSelection(productName, newEntry));
 
         newEntry.name = productName;
+
+        // Cambia il colore dell'entry a seconda che il prodotto sia spawnato
+        var entryImage = newEntry.GetComponent<Image>();
+        if (entryImage != null)
+        {
+            entryImage.color = spawnedProducts.ContainsKey(productName) ? Color.green : Color.yellow;
+        }
     }
 
-    private void SpawnProduct(string productName)
+    private void HandleProductSelection(string productName, GameObject entry)
+    {
+        if (spawnedProducts.ContainsKey(productName))
+        {
+            // Il prodotto è già spawnato, quindi sposta la telecamera e termina
+            FocusOnProduct(spawnedProducts[productName]);
+        }
+        else
+        {
+            // Spawna un nuovo prodotto
+            SpawnProduct(productName, entry);
+        }
+    }
+
+    private void SpawnProduct(string productName, GameObject entry)
     {
         if (pointerInstance == null || !pointerInstance)
         {
@@ -133,8 +169,6 @@ public class ProductListLoader : MonoBehaviour
         }
 
         var spawnPosition = pointerInstance.transform.position;
-        spawnPosition.y = SpawnHeight;
-
         var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity, productListManager.transform);
         newProduct.name = productName;
 
@@ -148,25 +182,25 @@ public class ProductListLoader : MonoBehaviour
             {
                 textMesh.text = productName;
                 textMesh.alignment = TextAlignmentOptions.Center;
-                textMesh.fontSize = 150f;
+                textMesh.fontSize = 20f;
                 textMesh.color = Color.yellow;
             }
         }
 
         spawnedProducts[productName] = newProduct;
-        UpdateProductListUI();
+
+        // Cambia il colore dell'entry su verde
+        var entryImage = entry.GetComponent<Image>();
+        if (entryImage != null)
+            entryImage.color = Color.green;
     }
 
-    private void FocusOnProduct(string productName)
+    private void FocusOnProduct(GameObject product)
     {
-        if (spawnedProducts.TryGetValue(productName, out var product))
+        if (product != null && Camera.main != null)
         {
-            Camera.main.transform.position = product.transform.position - Camera.main.transform.forward * 5f;
-            Camera.main.transform.LookAt(product.transform);
-        }
-        else
-        {
-            Debug.LogWarning($"Product '{productName}' not found in scene.");
+            Camera.main.transform.position = product.transform.position - Camera.main.transform.forward * 10f;
+            Debug.Log($"Camera focused on {product.name}.");
         }
     }
 
@@ -188,8 +222,15 @@ public class ProductListLoader : MonoBehaviour
             {
                 GameObject clickedObject = hit.collider.gameObject;
 
+                // Controlla se l'oggetto ha il tag "Product" prima di eliminarlo
                 if (clickedObject != null && clickedObject.CompareTag("Product"))
+                {
                     RemoveProduct(clickedObject);
+                }
+                else
+                {
+                    Debug.Log("Object is not a product and cannot be deleted.");
+                }
             }
         }
     }
@@ -204,14 +245,24 @@ public class ProductListLoader : MonoBehaviour
 
         string productName = product.name;
 
-        if (!string.IsNullOrEmpty(productName) && spawnedProducts.ContainsKey(productName))
+        // Controlla se il nome del prodotto è valido e non è già nella lista
+        if (!string.IsNullOrEmpty(productName) && !availableProducts.Contains(productName))
         {
-            spawnedProducts.Remove(productName);
             availableProducts.Add(productName);
             Debug.Log($"Product '{productName}' added back to the available list.");
         }
 
+        // Rimuove il prodotto dalla lista dei prodotti spawnati
+        if (spawnedProducts.ContainsKey(productName))
+            spawnedProducts.Remove(productName);
+
         Destroy(product);
+
+        // Cambia il colore dell'entry su giallo
+        var entry = contentPanel.Find(productName)?.GetComponent<Image>();
+        if (entry != null)
+            entry.color = Color.yellow;
+
         UpdateProductListUI();
         Debug.Log($"Product '{productName}' has been removed.");
     }
