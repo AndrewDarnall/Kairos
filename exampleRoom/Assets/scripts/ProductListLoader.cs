@@ -23,9 +23,11 @@ public class ProductListLoader : MonoBehaviour
     public GameObject productListManager;
 
     private List<string> availableProducts = new();
+    private Dictionary<string, GameObject> spawnedProducts = new();
     private GameObject pointerInstance;
     private const string FilePath = "Assets/Resources/Products.txt";
     private const string SaveFolder = "Assets/SavedPrefabs";
+    private const float SpawnHeight = 70.0f;
 
     private void Start()
     {
@@ -41,7 +43,6 @@ public class ProductListLoader : MonoBehaviour
             UpdatePointerPosition();
             HandleProductDeletion();
 
-            // Save all data when pressing Shift + S
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
             if (Input.GetKeyDown(KeyCode.S)) 
                 SaveAll();
@@ -84,7 +85,6 @@ public class ProductListLoader : MonoBehaviour
 
     private void UpdateProductListUI(string filter = "")
     {
-        // Rimuove tutti i figli esistenti in modo sicuro
         foreach (Transform child in contentPanel)
         {
             if (child != null && child.gameObject != null)
@@ -107,7 +107,18 @@ public class ProductListLoader : MonoBehaviour
 
         var button = newEntry.GetComponent<Button>();
         if (button != null)
-            button.onClick.AddListener(() => SpawnProduct(productName));
+        {
+            if (spawnedProducts.ContainsKey(productName))
+            {
+                button.onClick.AddListener(() => FocusOnProduct(productName));
+                button.GetComponent<Image>().color = Color.green;
+            }
+            else
+            {
+                button.onClick.AddListener(() => SpawnProduct(productName));
+                button.GetComponent<Image>().color = Color.yellow;
+            }
+        }
 
         newEntry.name = productName;
     }
@@ -121,6 +132,8 @@ public class ProductListLoader : MonoBehaviour
         }
 
         var spawnPosition = pointerInstance.transform.position;
+        spawnPosition.y = SpawnHeight;
+
         var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity, productListManager.transform);
         newProduct.name = productName;
 
@@ -139,8 +152,21 @@ public class ProductListLoader : MonoBehaviour
             }
         }
 
-        availableProducts.Remove(productName);
+        spawnedProducts[productName] = newProduct;
         UpdateProductListUI();
+    }
+
+    private void FocusOnProduct(string productName)
+    {
+        if (spawnedProducts.TryGetValue(productName, out var product))
+        {
+            Camera.main.transform.position = product.transform.position - Camera.main.transform.forward * 5f;
+            Camera.main.transform.LookAt(product.transform);
+        }
+        else
+        {
+            Debug.LogWarning($"Product '{productName}' not found in scene.");
+        }
     }
 
     private void UpdatePointerPosition()
@@ -161,15 +187,8 @@ public class ProductListLoader : MonoBehaviour
             {
                 GameObject clickedObject = hit.collider.gameObject;
 
-                // Controlla se l'oggetto ha il tag "Product" prima di eliminarlo
                 if (clickedObject != null && clickedObject.CompareTag("Product"))
-                {
                     RemoveProduct(clickedObject);
-                }
-                else
-                {
-                    Debug.Log("Object is not a product and cannot be deleted.");
-                }
             }
         }
     }
@@ -184,9 +203,9 @@ public class ProductListLoader : MonoBehaviour
 
         string productName = product.name;
 
-        // Controlla se il nome del prodotto è valido e non è già nella lista
-        if (!string.IsNullOrEmpty(productName) && !availableProducts.Contains(productName))
+        if (!string.IsNullOrEmpty(productName) && spawnedProducts.ContainsKey(productName))
         {
+            spawnedProducts.Remove(productName);
             availableProducts.Add(productName);
             Debug.Log($"Product '{productName}' added back to the available list.");
         }
@@ -195,7 +214,6 @@ public class ProductListLoader : MonoBehaviour
         UpdateProductListUI();
         Debug.Log($"Product '{productName}' has been removed.");
     }
-
 
     private void SaveAll()
     {
