@@ -41,8 +41,10 @@ public class ProductListLoader : MonoBehaviour
             UpdatePointerPosition();
             HandleProductDeletion();
 
+            // Save all data when pressing Shift + S
             if (Input.GetKey(KeyCode.LeftShift) || Input.GetKey(KeyCode.RightShift))
-                if (Input.GetKeyDown(KeyCode.S)) SaveAll();
+            if (Input.GetKeyDown(KeyCode.S)) 
+                SaveAll();
         }
     }
 
@@ -159,19 +161,15 @@ public class ProductListLoader : MonoBehaviour
             {
                 GameObject clickedObject = hit.collider.gameObject;
 
-                // Controlla se l'oggetto esiste e non è già stato distrutto
-                if (clickedObject != null)
+                // Controlla se l'oggetto ha il tag "Product" prima di eliminarlo
+                if (clickedObject != null && clickedObject.CompareTag("Product"))
                 {
                     RemoveProduct(clickedObject);
                 }
                 else
                 {
-                    Debug.LogWarning("The object you tried to remove does not exist or has already been destroyed.");
+                    Debug.Log("Object is not a product and cannot be deleted.");
                 }
-            }
-            else
-            {
-                Debug.LogWarning("No object was detected under the mouse cursor.");
             }
         }
     }
@@ -197,6 +195,7 @@ public class ProductListLoader : MonoBehaviour
         UpdateProductListUI();
         Debug.Log($"Product '{productName}' has been removed.");
     }
+
 
     private void SaveAll()
     {

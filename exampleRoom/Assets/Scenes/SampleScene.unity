@@ -1008,6 +1008,18 @@ PrefabInstance:
     serializedVersion: 3
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 991386760570930807, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: m_TagString
+      value: Product
+      objectReference: {fileID: 0}
+    - target: {fileID: 5519775021608024158, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: m_TagString
+      value: Product
+      objectReference: {fileID: 0}
+    - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: mainCamera
+      value: 
+      objectReference: {fileID: 963194227}
     - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: contentPanel
       value: 
@@ -1063,6 +1075,10 @@ PrefabInstance:
     - target: {fileID: 8360929378179483184, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 8913173178176508346, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: m_TagString
+      value: Product
       objectReference: {fileID: 0}
     m_RemovedComponents: []
     m_RemovedGameObjects:
