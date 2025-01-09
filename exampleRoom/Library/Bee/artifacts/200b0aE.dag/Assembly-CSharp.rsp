@@ -355,6 +355,7 @@
 -analyzer:"/Applications/Unity/Hub/Editor/2022.3.49f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.Properties.SourceGenerator.dll"
 -analyzer:"/Applications/Unity/Hub/Editor/2022.3.49f1/Unity.app/Contents/Tools/Unity.SourceGenerators/Unity.SourceGenerators.dll"
 "Assets/Scripts/DragAndDrop.cs"
+"Assets/Scripts/HelperMenuManager.cs"
 "Assets/Scripts/MoveCamera.cs"
 "Assets/Scripts/ProductListLoader.cs"
 "Assets/TextMesh Pro/Examples & Extras/Scripts/Benchmark01.cs"
