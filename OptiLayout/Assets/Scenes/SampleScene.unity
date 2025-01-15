@@ -733,7 +733,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 193, y: 15}
+  m_AnchoredPosition: {x: 170, y: 15}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783971282
@@ -757,12 +757,14 @@ MonoBehaviour:
     m_PersistentCalls:
       m_Calls: []
   m_text: "<sprite name=\"camera\">  Press \u2018C\u2019 to enable/disable free movement
-    mode.\n<sprite name=\"help\">  Press \u2018U\u2019 to enable/disable top-down
-    view.\n<sprite name=\"delete\">  Hold 'D'+ click on a product to delete it\n<sprite
-    name=\"save\">  Press \u2018Shift + S\u2019 to save.\n<sprite name=\"move\"> 
-    Use 'WASD' to move the camera in free movement mode\n<sprite name=\"upArrow\"> 
-    Use 'Arrow keys' to adjust the height in top-down view\n<sprite name=\"info\"> 
-    Press \u2018H\u2019 to show/hide this menu."
+    mode.\n<sprite name=\"up\">  Press \u2018U\u2019 to enable/disable top-down view.\n<sprite
+    name=\"save\">  Press \u2018Shift + S\u2019 to save.\n<sprite name=\"delete\"> 
+    Hold 'D'+ click on a product to delete it\n<sprite name=\"move\">  Use 'WASD'
+    to move the camera in free movement mode\n<sprite name=\"zoom\">  Use 'Arrow
+    keys' to adjust the height in top-down view\n<sprite name=\"xyz\">  Hold 'X|Y|Z
+    + Arrow keys' to adjust product's position along X|Y|Z axe\n<sprite name=\"quit\"> 
+    Press \u2018Shift + Q\u2019 to close App.\n<sprite name=\"info\">  Press \u2018H\u2019
+    to show/hide this menu."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
   m_sharedMaterial: {fileID: 2100000, guid: e73a58f6e2794ae7b1b7e50b7fb811b0, type: 2}
@@ -825,7 +827,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -334.0104, y: -131.95935, z: -136.66443, w: -144.34494}
+  m_margin: {x: -334.0104, y: -131.95935, z: -208.96454, w: -144.34494}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -874,7 +876,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 2, y: -2}
+  m_AnchoredPosition: {x: -1, y: -2}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &907297875
@@ -1670,7 +1672,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -332, y: -156}
+  m_AnchoredPosition: {x: -365, y: -156}
   m_SizeDelta: {x: 150, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1893361249
@@ -1871,7 +1873,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -334.8, y: 178}
+  m_AnchoredPosition: {x: -364.4, y: 178}
   m_SizeDelta: {x: 150, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1969289414
@@ -2115,7 +2117,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -335, y: 10}
+  m_AnchoredPosition: {x: -365, y: 10}
   m_SizeDelta: {x: 150, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2088512974

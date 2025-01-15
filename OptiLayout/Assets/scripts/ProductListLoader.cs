@@ -6,7 +6,6 @@ using UnityEngine.UI;
 using TMPro;
 using UnityEditor;
 using UnityEngine.EventSystems;
-//import PrefabUtility 
 
 public class ProductListLoader : MonoBehaviour
 {
@@ -54,9 +53,13 @@ public class ProductListLoader : MonoBehaviour
             {
                 if (Input.GetKeyDown(KeyCode.S))
                     SaveAll();
+
+                if (Input.GetKeyDown(KeyCode.Q))
+                    QuitApplication(); // Aggiungi questo metodo
             }
         }
     }
+
 
     private void InitializePointer()
     {
@@ -157,78 +160,77 @@ public class ProductListLoader : MonoBehaviour
         }
     }
 
-private void SpawnProduct(string productName, GameObject entry)
-{
-    if (pointerInstance == null || !pointerInstance)
+    private void SpawnProduct(string productName, GameObject entry)
     {
-        Debug.LogWarning("Pointer instance is missing or destroyed.");
-        return;
+        if (pointerInstance == null || !pointerInstance)
+        {
+            Debug.LogWarning("Pointer instance is missing or destroyed.");
+            return;
+        }
+
+        if (spawnedProducts.ContainsKey(productName) && spawnedProducts[productName] != null)
+        {
+            Debug.LogWarning($"Product {productName} is already spawned.");
+            return;
+        }
+
+        // Spawn position for the product
+        var spawnPosition = pointerInstance.transform.position;
+
+        // Spawn the product
+        var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity); // No parent
+        newProduct.name = productName;
+
+        // Calculate the size of the product
+        var productBounds = newProduct.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
+
+        // Add a text label slightly above the product
+        GameObject textObject = new GameObject("ProductNameText");
+        textObject.transform.SetParent(newProduct.transform); // Attach the text to the product
+
+        // Position the label slightly above the top edge
+        float textOffset = productBounds.y + 2f; // Offset slightly above the top edge
+        textObject.transform.localPosition = Vector3.up * textOffset;
+
+        // Add the TextMeshPro component
+        var textMesh = textObject.AddComponent<TextMeshPro>();
+        textMesh.text = productName; // Set the product name as text
+        textMesh.fontSize = 5f;      // Set the text size
+        textMesh.alignment = TextAlignmentOptions.Center; // Center the text
+        textMesh.color = Color.black; // Set the text color
+
+        // Keep the text oriented towards the camera
+        if (Camera.main != null)
+        {
+            textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+        }
+
+        // Save the product in the list of spawned objects
+        spawnedProducts[productName] = newProduct;
+
+        // Change the color of the UI element
+        var entryImage = entry.GetComponent<Image>();
+        if (entryImage != null)
+            entryImage.color = Color.green;
     }
 
-    if (spawnedProducts.ContainsKey(productName) && spawnedProducts[productName] != null)
+    private void FocusOnProduct(GameObject product)
     {
-        Debug.LogWarning($"Product {productName} is already spawned.");
-        return;
+        if (product != null && Camera.main != null)
+        {
+            Vector3 offset = Camera.main.transform.forward * 10f;
+            Camera.main.transform.position = product.transform.position - offset;
+
+            // Point the camera towards the object
+            Camera.main.transform.LookAt(product.transform);
+
+            Debug.Log($"Camera focused on {product.name}.");
+        }
+        else
+        {
+            Debug.LogWarning("Product or camera is null, focus operation aborted.");
+        }
     }
-
-    // Spawn position for the product
-    var spawnPosition = pointerInstance.transform.position;
-
-    // Spawn the product
-    var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity); // No parent
-    newProduct.name = productName;
-
-    // Calculate the size of the product
-    var productBounds = newProduct.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
-
-    // Add a text label slightly above the product
-    GameObject textObject = new GameObject("ProductNameText");
-    textObject.transform.SetParent(newProduct.transform); // Attach the text to the product
-
-    // Position the label slightly above the top edge
-    float textOffset = productBounds.y + 2f; // Offset slightly above the top edge
-    textObject.transform.localPosition = Vector3.up * textOffset;
-
-    // Add the TextMeshPro component
-    var textMesh = textObject.AddComponent<TextMeshPro>();
-    textMesh.text = productName; // Set the product name as text
-    textMesh.fontSize = 5f;      // Set the text size
-    textMesh.alignment = TextAlignmentOptions.Center; // Center the text
-    textMesh.color = Color.black; // Set the text color
-
-    // Keep the text oriented towards the camera
-    if (Camera.main != null)
-    {
-        textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
-    }
-
-    // Save the product in the list of spawned objects
-    spawnedProducts[productName] = newProduct;
-
-    // Change the color of the UI element
-    var entryImage = entry.GetComponent<Image>();
-    if (entryImage != null)
-        entryImage.color = Color.green;
-}
-
-private void FocusOnProduct(GameObject product)
-{
-    if (product != null && Camera.main != null)
-    {
-        Vector3 offset = Camera.main.transform.forward * 10f;
-        Camera.main.transform.position = product.transform.position - offset;
-
-        // Puntare la camera verso l'oggetto
-        Camera.main.transform.LookAt(product.transform);
-
-        Debug.Log($"Camera focused on {product.name}.");
-    }
-    else
-    {
-        Debug.LogWarning("Product or camera is null, focus operation aborted.");
-    }
-}
-
 
     private void UpdatePointerPosition()
     {
@@ -237,6 +239,19 @@ private void FocusOnProduct(GameObject product)
             pointerInstance.transform.position = Camera.main.transform.position + Camera.main.transform.forward * 40f;
             pointerInstance.SetActive(true);
         }
+    }
+
+    private void QuitApplication()
+    {
+        Debug.Log("Exiting application...");
+
+    #if UNITY_EDITOR
+        // Per uscire dall'editor durante il Play Mode
+        UnityEditor.EditorApplication.isPlaying = false;
+    #else
+        // Per chiudere l'applicazione compilata
+        Application.Quit();
+    #endif
     }
 
     private void HandleProductDeletion()
@@ -313,102 +328,100 @@ private void FocusOnProduct(GameObject product)
         Debug.Log($"Products saved to {filePath}");
     }
 
-private void SavePlacedProducts()
-{
-    var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
-
-    var placedProducts = spawnedProducts
-        .Where(kvp => kvp.Value != null) // Ensure the object exists
-        .Select(kvp =>
-        {
-            var position = kvp.Value.transform.position;
-            return $"{kvp.Key}|{position.x},{position.y},{position.z}";
-        })
-        .ToList();
-
-    File.WriteAllLines(placedFilePath, placedProducts);
-    Debug.Log($"Placed products with positions saved to {placedFilePath}");
-}
-
-private void LoadPlacedProducts()
-{
-    var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
-
-    if (File.Exists(placedFilePath))
+    private void SavePlacedProducts()
     {
-        var placedProducts = File.ReadAllLines(placedFilePath)
-            .Select(line =>
+        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
+
+        var placedProducts = spawnedProducts
+            .Where(kvp => kvp.Value != null) // Ensure the object exists
+            .Select(kvp =>
             {
-                var parts = line.Split('|');
-                if (parts.Length != 2) return default; // Use default value
-
-                var productName = parts[0].Trim();
-                var positionParts = parts[1].Split(',');
-                if (positionParts.Length != 3) return default; // Use default value
-
-                if (float.TryParse(positionParts[0], out var x) &&
-                    float.TryParse(positionParts[1], out var y) &&
-                    float.TryParse(positionParts[2], out var z))
-                {
-                    return (productName, new Vector3(x, y, z));
-                }
-
-                return default; // Use default value
+                var position = kvp.Value.transform.position;
+                return $"{kvp.Key}|{position.x},{position.y},{position.z}";
             })
-            .Where(entry => !string.IsNullOrEmpty(entry.productName)) // Filter invalid entries
             .ToList();
 
-        foreach (var (productName, position) in placedProducts)
+        File.WriteAllLines(placedFilePath, placedProducts);
+        Debug.Log($"Placed products with positions saved to {placedFilePath}");
+    }
+
+    private void LoadPlacedProducts()
+    {
+        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
+
+        if (File.Exists(placedFilePath))
         {
-            if (!spawnedProducts.ContainsKey(productName) && availableProducts.Contains(productName))
+            var placedProducts = File.ReadAllLines(placedFilePath)
+                .Select(line =>
+                {
+                    var parts = line.Split('|');
+                    if (parts.Length != 2) return default; // Use default value
+
+                    var productName = parts[0].Trim();
+                    var positionParts = parts[1].Split(',');
+                    if (positionParts.Length != 3) return default; // Use default value
+
+                    if (float.TryParse(positionParts[0], out var x) &&
+                        float.TryParse(positionParts[1], out var y) &&
+                        float.TryParse(positionParts[2], out var z))
+                    {
+                        return (productName, new Vector3(x, y, z));
+                    }
+
+                    return default; // Use default value
+                })
+                .Where(entry => !string.IsNullOrEmpty(entry.productName)) // Filter invalid entries
+                .ToList();
+
+            foreach (var (productName, position) in placedProducts)
             {
-                // Instantiate the product at the saved position
-                var newProduct = Instantiate(productPrefab, position, Quaternion.identity); // No parent
-                newProduct.name = productName;
+                if (!spawnedProducts.ContainsKey(productName) && availableProducts.Contains(productName))
+                {
+                    // Instantiate the product at the saved position
+                    var newProduct = Instantiate(productPrefab, position, Quaternion.identity); // No parent
+                    newProduct.name = productName;
 
-                // Associate the product with the dictionary
-                spawnedProducts[productName] = newProduct;
+                    // Associate the product with the dictionary
+                    spawnedProducts[productName] = newProduct;
 
-                // Configure a visible label above the product
-                SetupProductLabel(newProduct, productName);
+                    // Configure a visible label above the product
+                    SetupProductLabel(newProduct, productName);
 
-                Debug.Log($"Product '{productName}' instantiated at {position}");
+                    Debug.Log($"Product '{productName}' instantiated at {position}");
+                }
             }
+
+            Debug.Log("Placed products with positions loaded and instantiated successfully.");
         }
-
-        Debug.Log("Placed products with positions loaded and instantiated successfully.");
+        else
+        {
+            Debug.LogWarning($"File {PlacedProductsFileName} not found in {ResourcesFolder}.");
+        }
     }
-    else
+
+    // Support method to create the label above the object
+    private void SetupProductLabel(GameObject product, string productName)
     {
-        Debug.LogWarning($"File {PlacedProductsFileName} not found in {ResourcesFolder}.");
+        var productBounds = product.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
+
+        // Add the label above the product
+        GameObject textObject = new GameObject("ProductNameText");
+        textObject.transform.SetParent(product.transform);
+
+        float textOffset = productBounds.y + 2f;
+        textObject.transform.localPosition = Vector3.up * textOffset;
+
+        var textMesh = textObject.AddComponent<TextMeshPro>();
+        textMesh.text = productName;
+        textMesh.fontSize = 5f;
+        textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.color = Color.black;
+
+        if (Camera.main != null)
+        {
+            textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+        }
     }
-}
-
-
-// Metodo di supporto per creare l'etichetta sopra l'oggetto
-private void SetupProductLabel(GameObject product, string productName)
-{
-    var productBounds = product.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
-
-    // Aggiunge l'etichetta sopra il prodotto
-    GameObject textObject = new GameObject("ProductNameText");
-    textObject.transform.SetParent(product.transform);
-
-    float textOffset = productBounds.y + 2f;
-    textObject.transform.localPosition = Vector3.up * textOffset;
-
-    var textMesh = textObject.AddComponent<TextMeshPro>();
-    textMesh.text = productName;
-    textMesh.fontSize = 5f;
-    textMesh.alignment = TextAlignmentOptions.Center;
-    textMesh.color = Color.black;
-
-    if (Camera.main != null)
-    {
-        textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
-    }
-}
-
 
     private bool IsInputFieldFocused()
     {
