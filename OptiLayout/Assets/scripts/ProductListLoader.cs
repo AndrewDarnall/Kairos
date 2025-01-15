@@ -160,59 +160,43 @@ public class ProductListLoader : MonoBehaviour
         }
     }
 
-    private void SpawnProduct(string productName, GameObject entry)
+private void SpawnProduct(string productName, GameObject entry)
+{
+    if (pointerInstance == null)
     {
-        if (pointerInstance == null || !pointerInstance)
-        {
-            Debug.LogWarning("Pointer instance is missing or destroyed.");
-            return;
-        }
-
-        if (spawnedProducts.ContainsKey(productName) && spawnedProducts[productName] != null)
-        {
-            Debug.LogWarning($"Product {productName} is already spawned.");
-            return;
-        }
-
-        // Spawn position for the product
-        var spawnPosition = pointerInstance.transform.position;
-
-        // Spawn the product
-        var newProduct = Instantiate(productPrefab, spawnPosition, Quaternion.identity); // No parent
-        newProduct.name = productName;
-
-        // Calculate the size of the product
-        var productBounds = newProduct.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
-
-        // Add a text label slightly above the product
-        GameObject textObject = new GameObject("ProductNameText");
-        textObject.transform.SetParent(newProduct.transform); // Attach the text to the product
-
-        // Position the label slightly above the top edge
-        float textOffset = productBounds.y + 2f; // Offset slightly above the top edge
-        textObject.transform.localPosition = Vector3.up * textOffset;
-
-        // Add the TextMeshPro component
-        var textMesh = textObject.AddComponent<TextMeshPro>();
-        textMesh.text = productName; // Set the product name as text
-        textMesh.fontSize = 5f;      // Set the text size
-        textMesh.alignment = TextAlignmentOptions.Center; // Center the text
-        textMesh.color = Color.black; // Set the text color
-
-        // Keep the text oriented towards the camera
-        if (Camera.main != null)
-        {
-            textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
-        }
-
-        // Save the product in the list of spawned objects
-        spawnedProducts[productName] = newProduct;
-
-        // Change the color of the UI element
-        var entryImage = entry.GetComponent<Image>();
-        if (entryImage != null)
-            entryImage.color = Color.green;
+        Debug.LogWarning("Pointer instance is missing or destroyed.");
+        return;
     }
+
+    // Controlla se il prodotto esiste già come figlio di ProductListManager
+    if (spawnedProducts.ContainsKey(productName))
+    {
+        Debug.LogWarning($"Product {productName} is already spawned.");
+        return;
+    }
+
+    var globalSpawnPosition = pointerInstance.transform.position;
+    var parentTransform = productListManager.transform;
+    var localSpawnPosition = parentTransform.InverseTransformPoint(globalSpawnPosition);
+
+    // Crea il nuovo prodotto come figlio del ProductListManager
+    var newProduct = Instantiate(productPrefab, parentTransform);
+    newProduct.transform.localPosition = localSpawnPosition;
+    newProduct.name = productName;
+
+    // Configura il prodotto (aggiunge l'etichetta sopra di esso)
+    SetupProductLabel(newProduct, productName);
+
+    // Aggiungi il prodotto alla lista degli oggetti generati
+    spawnedProducts[productName] = newProduct;
+
+    // Aggiorna il colore dell'entry nell'UI
+    var entryImage = entry.GetComponent<Image>();
+    if (entryImage != null)
+        entryImage.color = Color.green;
+
+    Debug.Log($"Product '{productName}' spawned at local position {localSpawnPosition}.");
+}
 
     private void FocusOnProduct(GameObject product)
     {
@@ -275,51 +259,44 @@ public class ProductListLoader : MonoBehaviour
         }
     }
 
-    private void RemoveProduct(GameObject product)
+private void RemoveProduct(GameObject product)
+{
+    if (product == null)
     {
-        if (product == null || !product)
-        {
-            Debug.LogWarning("The product you are trying to remove no longer exists.");
-            return;
-        }
-
-        string productName = product.name;
-
-        if (!string.IsNullOrEmpty(productName) && !availableProducts.Contains(productName))
-        {
-            availableProducts.Add(productName);
-            Debug.Log($"Product '{productName}' added back to the available list.");
-        }
-
-        if (spawnedProducts.ContainsKey(productName))
-            spawnedProducts.Remove(productName);
-
-        Destroy(product);
-
-        var entry = contentPanel.Find(productName)?.GetComponent<Image>();
-        if (entry != null)
-            entry.color = Color.yellow;
-
-        UpdateProductListUI();
-        Debug.Log($"Product '{productName}' has been removed.");
+        Debug.LogWarning("The product you are trying to remove does not exist.");
+        return;
     }
+
+    string productName = product.name;
+
+    if (spawnedProducts.ContainsKey(productName))
+        spawnedProducts.Remove(productName);
+
+    Destroy(product);
+
+    Debug.Log($"Product '{productName}' removed from the scene.");
+    UpdateProductListUI();
+}
+
+
 
     private void SaveAll()
     {
         SaveProductListManager();
         SaveProductsToFile();
-        SavePlacedProducts();
     }
 
-    private void SaveProductListManager()
-    {
-        if (!Directory.Exists(SaveFolder))
-            Directory.CreateDirectory(SaveFolder);
+private void SaveProductListManager()
+{
+    if (!Directory.Exists(SaveFolder))
+        Directory.CreateDirectory(SaveFolder);
 
-        var prefabPath = Path.Combine(SaveFolder, $"{productListManager.name}.prefab");
-        var prefab = PrefabUtility.SaveAsPrefabAsset(productListManager, prefabPath);
-        Debug.Log(prefab ? $"Prefab saved at {prefabPath}" : "Failed to save prefab!");
-    }
+    var prefabPath = Path.Combine(SaveFolder, $"{productListManager.name}.prefab");
+    var prefab = PrefabUtility.SaveAsPrefabAsset(productListManager, prefabPath);
+
+    Debug.Log(prefab ? $"ProductListManager saved as prefab at {prefabPath}" : "Failed to save prefab!");
+}
+
 
     private void SaveProductsToFile()
     {
@@ -328,76 +305,21 @@ public class ProductListLoader : MonoBehaviour
         Debug.Log($"Products saved to {filePath}");
     }
 
-    private void SavePlacedProducts()
+private void LoadPlacedProducts()
+{
+    foreach (Transform child in productListManager.transform)
     {
-        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
+        var productName = child.name;
 
-        var placedProducts = spawnedProducts
-            .Where(kvp => kvp.Value != null) // Ensure the object exists
-            .Select(kvp =>
-            {
-                var position = kvp.Value.transform.position;
-                return $"{kvp.Key}|{position.x},{position.y},{position.z}";
-            })
-            .ToList();
-
-        File.WriteAllLines(placedFilePath, placedProducts);
-        Debug.Log($"Placed products with positions saved to {placedFilePath}");
-    }
-
-    private void LoadPlacedProducts()
-    {
-        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
-
-        if (File.Exists(placedFilePath))
+        // Verifica che il prodotto non sia già registrato
+        if (!spawnedProducts.ContainsKey(productName))
         {
-            var placedProducts = File.ReadAllLines(placedFilePath)
-                .Select(line =>
-                {
-                    var parts = line.Split('|');
-                    if (parts.Length != 2) return default; // Use default value
-
-                    var productName = parts[0].Trim();
-                    var positionParts = parts[1].Split(',');
-                    if (positionParts.Length != 3) return default; // Use default value
-
-                    if (float.TryParse(positionParts[0], out var x) &&
-                        float.TryParse(positionParts[1], out var y) &&
-                        float.TryParse(positionParts[2], out var z))
-                    {
-                        return (productName, new Vector3(x, y, z));
-                    }
-
-                    return default; // Use default value
-                })
-                .Where(entry => !string.IsNullOrEmpty(entry.productName)) // Filter invalid entries
-                .ToList();
-
-            foreach (var (productName, position) in placedProducts)
-            {
-                if (!spawnedProducts.ContainsKey(productName) && availableProducts.Contains(productName))
-                {
-                    // Instantiate the product at the saved position
-                    var newProduct = Instantiate(productPrefab, position, Quaternion.identity); // No parent
-                    newProduct.name = productName;
-
-                    // Associate the product with the dictionary
-                    spawnedProducts[productName] = newProduct;
-
-                    // Configure a visible label above the product
-                    SetupProductLabel(newProduct, productName);
-
-                    Debug.Log($"Product '{productName}' instantiated at {position}");
-                }
-            }
-
-            Debug.Log("Placed products with positions loaded and instantiated successfully.");
-        }
-        else
-        {
-            Debug.LogWarning($"File {PlacedProductsFileName} not found in {ResourcesFolder}.");
+            spawnedProducts[productName] = child.gameObject;
+            Debug.Log($"Product '{productName}' loaded from scene hierarchy.");
         }
     }
+}
+
 
     // Support method to create the label above the object
     private void SetupProductLabel(GameObject product, string productName)
