@@ -874,7 +874,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 29, y: -2}
+  m_AnchoredPosition: {x: 2, y: -2}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &907297875
@@ -1190,11 +1190,14 @@ PrefabInstance:
     - {fileID: 716487200023699123, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     - {fileID: 3914753601867104982, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     - {fileID: 3433790211905074994, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 2846653711191210069, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5280089038693260449, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 1856034580823069103, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 1168828454104263855, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 953056155396144451, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 6842923803120510487, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 1222149142251383252, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
 --- !u!1 &1247660960
 GameObject:
