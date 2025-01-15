@@ -211,14 +211,24 @@ public class ProductListLoader : MonoBehaviour
     }
 
 
-    private void FocusOnProduct(GameObject product)
+private void FocusOnProduct(GameObject product)
+{
+    if (product != null && Camera.main != null)
     {
-        if (product != null && Camera.main != null)
-        {
-            Camera.main.transform.position = product.transform.position - Camera.main.transform.forward * 10f;
-            Debug.Log($"Camera focused on {product.name}.");
-        }
+        Vector3 offset = Camera.main.transform.forward * 10f;
+        Camera.main.transform.position = product.transform.position - offset;
+
+        // Puntare la camera verso l'oggetto
+        Camera.main.transform.LookAt(product.transform);
+
+        Debug.Log($"Camera focused on {product.name}.");
     }
+    else
+    {
+        Debug.LogWarning("Product or camera is null, focus operation aborted.");
+    }
+}
+
 
     private void UpdatePointerPosition()
     {
@@ -303,41 +313,102 @@ public class ProductListLoader : MonoBehaviour
         Debug.Log($"Products saved to {filePath}");
     }
 
-    private void SavePlacedProducts()
-    {
-        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
-        var placedProducts = spawnedProducts.Keys.ToList();
+private void SavePlacedProducts()
+{
+    var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
 
-        File.WriteAllLines(placedFilePath, placedProducts);
-        Debug.Log($"Placed products saved to {placedFilePath}");
-    }
-
-    private void LoadPlacedProducts()
-    {
-        var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
-
-        if (File.Exists(placedFilePath))
+    var placedProducts = spawnedProducts
+        .Where(kvp => kvp.Value != null) // Assicurati che l'oggetto non sia nullo
+        .Select(kvp =>
         {
-            var placedProducts = File.ReadAllLines(placedFilePath)
-                .Select(p => p.Trim())
-                .Where(p => !string.IsNullOrWhiteSpace(p))
-                .ToList();
+            var position = kvp.Value.transform.position;
+            return $"{kvp.Key}|{position.x},{position.y},{position.z}";
+        })
+        .ToList();
 
-            foreach (var productName in placedProducts)
+    File.WriteAllLines(placedFilePath, placedProducts);
+    Debug.Log($"Placed products with positions saved to {placedFilePath}");
+}
+
+private void LoadPlacedProducts()
+{
+    var placedFilePath = Path.Combine(ResourcesFolder, PlacedProductsFileName);
+
+    if (File.Exists(placedFilePath))
+    {
+        var placedProducts = File.ReadAllLines(placedFilePath)
+            .Select(line =>
             {
-                if (!spawnedProducts.ContainsKey(productName) && availableProducts.Contains(productName))
-                {
-                    spawnedProducts[productName] = null;
-                }
-            }
+                var parts = line.Split('|');
+                if (parts.Length != 2) return default; // Usa il valore predefinito
 
-            Debug.Log("Placed products loaded successfully.");
-        }
-        else
+                var productName = parts[0].Trim();
+                var positionParts = parts[1].Split(',');
+                if (positionParts.Length != 3) return default; // Usa il valore predefinito
+
+                if (float.TryParse(positionParts[0], out var x) &&
+                    float.TryParse(positionParts[1], out var y) &&
+                    float.TryParse(positionParts[2], out var z))
+                {
+                    return (productName, new Vector3(x, y, z));
+                }
+
+                return default; // Usa il valore predefinito
+            })
+            .Where(entry => !string.IsNullOrEmpty(entry.productName)) // Filtra i valori non validi
+            .ToList();
+
+        foreach (var (productName, position) in placedProducts)
         {
-            Debug.LogWarning($"File {PlacedProductsFileName} not found in {ResourcesFolder}.");
+            if (!spawnedProducts.ContainsKey(productName) && availableProducts.Contains(productName))
+            {
+                // Instanzia l'oggetto nella posizione salvata
+                var newProduct = Instantiate(productPrefab, position, Quaternion.identity, productListManager.transform);
+                newProduct.name = productName;
+
+                // Associa il prodotto al dizionario
+                spawnedProducts[productName] = newProduct;
+
+                // Configura un'etichetta visibile sopra l'oggetto
+                SetupProductLabel(newProduct, productName);
+
+                Debug.Log($"Product '{productName}' instantiated at {position}");
+            }
         }
+
+        Debug.Log("Placed products with positions loaded and instantiated successfully.");
     }
+    else
+    {
+        Debug.LogWarning($"File {PlacedProductsFileName} not found in {ResourcesFolder}.");
+    }
+}
+
+
+// Metodo di supporto per creare l'etichetta sopra l'oggetto
+private void SetupProductLabel(GameObject product, string productName)
+{
+    var productBounds = product.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
+
+    // Aggiunge l'etichetta sopra il prodotto
+    GameObject textObject = new GameObject("ProductNameText");
+    textObject.transform.SetParent(product.transform);
+
+    float textOffset = productBounds.y + 2f;
+    textObject.transform.localPosition = Vector3.up * textOffset;
+
+    var textMesh = textObject.AddComponent<TextMeshPro>();
+    textMesh.text = productName;
+    textMesh.fontSize = 5f;
+    textMesh.alignment = TextAlignmentOptions.Center;
+    textMesh.color = Color.black;
+
+    if (Camera.main != null)
+    {
+        textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+    }
+}
+
 
     private bool IsInputFieldFocused()
     {

@@ -733,7 +733,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: 171, y: 15}
+  m_AnchoredPosition: {x: 193, y: 15}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &783971282
@@ -756,12 +756,12 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_text: "<sprite name=\"camera\"> Press \u2018C\u2019 to enable/disable free movement
+  m_text: "<sprite name=\"camera\">  Press \u2018C\u2019 to enable/disable free movement
     mode.\n<sprite name=\"help\">  Press \u2018U\u2019 to enable/disable top-down
-    view.\n<sprite name=\"delete\">   Hold 'D'+ click on a product to delete it\n<sprite
-    name=\"save\">   Press \u2018Shift + S\u2019 to save.\n<sprite name=\"move\">  
-    Use 'WASD' to move the camera in free movement mode\n<sprite name=\"upArrow\">
-    Use 'Arrow keys' to adjust the height in top-down view\n<sprite name=\"info\">
+    view.\n<sprite name=\"delete\">  Hold 'D'+ click on a product to delete it\n<sprite
+    name=\"save\">  Press \u2018Shift + S\u2019 to save.\n<sprite name=\"move\"> 
+    Use 'WASD' to move the camera in free movement mode\n<sprite name=\"upArrow\"> 
+    Use 'Arrow keys' to adjust the height in top-down view\n<sprite name=\"info\"> 
     Press \u2018H\u2019 to show/hide this menu."
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
@@ -789,8 +789,8 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 24
-  m_fontSizeBase: 24
+  m_fontSize: 20
+  m_fontSizeBase: 20
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
@@ -825,7 +825,7 @@ MonoBehaviour:
   m_VertexBufferAutoSizeReduction: 0
   m_useMaxVisibleDescender: 1
   m_pageToDisplay: 1
-  m_margin: {x: -334.0104, y: -131.95935, z: -150.2666, w: -144.34494}
+  m_margin: {x: -334.0104, y: -131.95935, z: -136.66443, w: -144.34494}
   m_isUsingLegacyAnimationComponent: 0
   m_isVolumetricText: 0
   m_hasFontAssetChanged: 0
@@ -1098,6 +1098,10 @@ PrefabInstance:
       propertyPath: helperMenuPanel
       value: 
       objectReference: {fileID: 907297873}
+    - target: {fileID: 3434520750303784187, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: helperMenuPanel
+      value: 
+      objectReference: {fileID: 907297873}
     - target: {fileID: 4611586040964176781, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: m_AnchoredPosition.x
       value: -6.4
@@ -1182,17 +1186,11 @@ PrefabInstance:
     m_RemovedGameObjects:
     - {fileID: 4885133949054379661, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     - {fileID: 4590771669310390480, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5402378312840527413, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 716487200023699123, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 3914753601867104982, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     m_AddedGameObjects: []
-    m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 7796855569419658290, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 1846976772}
-    - targetCorrespondingSourceObject: {fileID: 5501022464557359600, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
-    - targetCorrespondingSourceObject: {fileID: 3351135158828144911, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
-      insertIndex: -1
-      addedObject: {fileID: 0}
+    m_AddedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
 --- !u!1 &1247660960
 GameObject:
@@ -1547,25 +1545,6 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   m_Padding: {x: -8, y: -5, z: -8, w: -5}
   m_Softness: {x: 0, y: 0}
---- !u!1 &1846976769 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 7796855569419658290, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
-  m_PrefabInstance: {fileID: 1223051081}
-  m_PrefabAsset: {fileID: 0}
---- !u!114 &1846976772
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1846976769}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: ea9a31b35dff944889ae54c691e61052, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  helperMenuPanel: {fileID: 907297873}
-  isHelperMenuVisibleAtStart: 0
 --- !u!1 &1859129744
 GameObject:
   m_ObjectHideFlags: 0
@@ -1684,8 +1663,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -336, y: -156}
-  m_SizeDelta: {x: 160, y: 30}
+  m_AnchoredPosition: {x: -332, y: -156}
+  m_SizeDelta: {x: 150, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!1 &1893361249
 GameObject:
@@ -1759,8 +1738,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 1, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: -2.6}
-  m_SizeDelta: {x: 20, y: -6}
+  m_AnchoredPosition: {x: -1.9000015, y: -2.5999985}
+  m_SizeDelta: {x: 10, y: -6}
   m_Pivot: {x: 1, y: 1}
 --- !u!114 &1908107637
 MonoBehaviour:
@@ -1885,8 +1864,8 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
-  m_AnchoredPosition: {x: -311, y: 178}
-  m_SizeDelta: {x: 200, y: 30}
+  m_AnchoredPosition: {x: -334.8, y: 178}
+  m_SizeDelta: {x: 150, y: 30}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1969289414
 MonoBehaviour:
@@ -2130,7 +2109,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: -335, y: 10}
-  m_SizeDelta: {x: 130, y: 100}
+  m_SizeDelta: {x: 150, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &2088512974
 MonoBehaviour:
@@ -2260,7 +2239,7 @@ MonoBehaviour:
   m_text: 'Active '
   m_isRightToLeft: 0
   m_fontAsset: {fileID: 11400000, guid: 8f586378b4e144a9851e7b34d9b748ee, type: 2}
-  m_sharedMaterial: {fileID: 2100000, guid: 8b29aaa3eec7468097ff07adfcf29ac9, type: 2}
+  m_sharedMaterial: {fileID: 2100000, guid: 42df1c7856584b6b8db9a509b6b10074, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
