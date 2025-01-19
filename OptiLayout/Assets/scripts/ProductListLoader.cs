@@ -52,6 +52,8 @@ public class ProductListLoader : MonoBehaviour
         LoadPlacedProducts();
         UpdateProductListUI();
         InitializeOffersMenu();
+            LoadOffers(); // Carica le offerte dal file
+
     }
 
     private void Update()
@@ -278,6 +280,40 @@ private void SpawnProduct(string productName, GameObject entry)
         }
     }
 
+
+private const string OffersFileName = "Offers.txt";
+
+private void HandleOfferSelection(string offerText, GameObject entry)
+{
+    SaveOfferToFile(offerText);
+    Debug.Log($"Offer '{offerText}' saved to file.");
+}
+
+private void SaveOfferToFile(string offerText)
+{
+    var filePath = Path.Combine(ResourcesFolder, OffersFileName);
+    if (!File.Exists(filePath))
+    {
+        File.Create(filePath).Dispose();
+        Debug.Log($"Offers file created at {filePath}");
+    }
+
+    var existingOffers = File.ReadAllLines(filePath).ToList();
+    if (!existingOffers.Contains(offerText))
+    {
+        existingOffers.Add(offerText);
+        File.WriteAllLines(filePath, existingOffers);
+        Debug.Log($"Offer '{offerText}' added to {filePath}");
+    }
+    else
+    {
+        Debug.Log($"Offer '{offerText}' already exists in {filePath}");
+    }
+}
+
+
+
+
 private void RemoveProduct(GameObject product)
 {
     if (product == null)
@@ -300,10 +336,22 @@ private void RemoveProduct(GameObject product)
 
 
     private void SaveAll()
-    {
-        SaveProductListManager();
-        SaveProductsToFile();
-    }
+{
+    SaveProductListManager();
+    SaveProductsToFile();
+    SaveAllOffersToFile();
+}
+
+private void SaveAllOffersToFile()
+{
+    var filePath = Path.Combine(ResourcesFolder, OffersFileName);
+    if (!Directory.Exists(ResourcesFolder))
+        Directory.CreateDirectory(ResourcesFolder);
+
+    File.WriteAllLines(filePath, activeOffers);
+    Debug.Log($"All offers saved to {filePath}");
+}
+
 
 private void SaveProductListManager()
 {
@@ -323,6 +371,26 @@ private void SaveProductListManager()
         File.WriteAllLines(filePath, availableProducts);
         Debug.Log($"Products saved to {filePath}");
     }
+
+private void LoadOffers()
+{
+    var filePath = Path.Combine(ResourcesFolder, OffersFileName);
+    if (!File.Exists(filePath))
+    {
+        Debug.LogWarning($"Offers file {OffersFileName} not found. Creating a new one.");
+        File.Create(filePath).Dispose();
+        return;
+    }
+
+    activeOffers = File.ReadAllLines(filePath)
+        .Select(o => o.Trim())
+        .Where(o => !string.IsNullOrWhiteSpace(o))
+        .Distinct()
+        .ToList();
+
+    UpdateOffersUI();
+    Debug.Log($"Loaded {activeOffers.Count} offers from {filePath}");
+}
 
 private void LoadPlacedProducts()
 {
@@ -473,10 +541,8 @@ private void AddOffer(string offerText)
 {
     if (string.IsNullOrWhiteSpace(offerText)) return;
 
-    // Aggiungi l'offerta alla lista
     activeOffers.Add(offerText);
 
-    // Crea una nuova entry nell'UI
     var newOfferEntry = Instantiate(productEntryPrefab, offersContentPanel);
     var textComponent = newOfferEntry.GetComponentInChildren<TextMeshProUGUI>();
     if (textComponent != null)
@@ -484,9 +550,13 @@ private void AddOffer(string offerText)
 
     newOfferEntry.name = offerText;
 
-    // Pulisci il campo di input
+    var button = newOfferEntry.GetComponent<Button>();
+    if (button != null)
+        button.onClick.AddListener(() => HandleOfferSelection(offerText, newOfferEntry));
+
     offersInputField.text = string.Empty;
 }
+
 
 private void UpdateOffersUI()
 {
