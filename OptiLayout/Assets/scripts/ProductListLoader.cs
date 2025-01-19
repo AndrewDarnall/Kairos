@@ -9,11 +9,22 @@ using UnityEngine.EventSystems;
 
 public class ProductListLoader : MonoBehaviour
 {
+    [Header("Offers Menu Elements")]
+    public GameObject offersScrollView; // Scroll View separata per le offerte
+    public Button toggleOffersButton; // Pulsante per alternare tra i menu
+    public TMP_InputField offersInputField; // Campo di input per nuove offerte
+    public Transform offersContentPanel; // Contenuto dello Scroll View delle offerte
+
+
+    private List<string> activeOffers = new(); // Lista delle offerte attive
+    private bool isOffersMenuVisible = false; // Stato del menu delle offerte
+
     [Header("UI Elements")]
     public GameObject productEntryPrefab;
     public Transform contentPanel;
     public TMP_InputField searchInputField;
     public Button activeProductFilterButton;
+    public GameObject productsScrollView; // Riferimento al menu dei prodotti
 
     [Header("Prefabs")]
     public GameObject productPrefab;
@@ -40,6 +51,7 @@ public class ProductListLoader : MonoBehaviour
         LoadProducts();
         LoadPlacedProducts();
         UpdateProductListUI();
+        InitializeOffersMenu();
     }
 
     private void Update()
@@ -71,15 +83,22 @@ public class ProductListLoader : MonoBehaviour
     }
 
     private void InitializeUI()
+{
+    // Assegna direttamente il riferimento al menu dei prodotti
+    productsScrollView = GameObject.Find("Canvas/Scroll View");
+    if (productsScrollView == null)
     {
-        searchInputField.onValueChanged.AddListener(UpdateProductListUI);
-        contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
-
-        if (activeProductFilterButton != null)
-        {
-            activeProductFilterButton.onClick.AddListener(ToggleFilter);
-        }
+        Debug.LogError("ProductsScrollView not found!");
     }
+
+    searchInputField.onValueChanged.AddListener(UpdateProductListUI);
+    contentPanel = GameObject.Find("Canvas/Scroll View/Viewport/Content").transform;
+
+    if (activeProductFilterButton != null)
+    {
+        activeProductFilterButton.onClick.AddListener(ToggleFilter);
+    }
+}
 
     private void ToggleFilter()
     {
@@ -355,4 +374,137 @@ private void LoadPlacedProducts()
         var inputField = selectedObject.GetComponent<TMP_InputField>();
         return inputField != null;
     }
+
+    private void InitializeOffersMenu()
+{
+    // Collega gli elementi del menu Offers
+    offersScrollView = GameObject.Find("Canvas/OffersScrollView");
+    if (offersScrollView == null)
+        Debug.LogError("OffersScrollView not found!");
+
+    toggleOffersButton = GameObject.Find("Canvas/ToggleOffersButton")?.GetComponent<Button>();
+    if (toggleOffersButton == null)
+        Debug.LogError("ToggleOffersButton not found!");
+
+    offersInputField = GameObject.Find("Canvas/OffersInputField")?.GetComponent<TMP_InputField>();
+    if (offersInputField == null)
+        Debug.LogError("OffersInputField not found!");
+
+    offersContentPanel = GameObject.Find("Canvas/OffersScrollView/Viewport/Content")?.transform;
+    if (offersContentPanel == null)
+        Debug.LogError("OffersContentPanel not found!");
+
+    // Configura gli eventi
+    if (toggleOffersButton != null)
+        toggleOffersButton.onClick.AddListener(ToggleOffersMenu);
+
+    if (offersInputField != null)
+        offersInputField.onSubmit.AddListener(AddOffer);
+
+    // Assicura che il menu offerte sia inizialmente nascosto
+    if (offersScrollView != null)
+        offersScrollView.SetActive(false);
+
+    // Nascondi il campo di input delle offerte all'inizio
+    if (offersInputField != null)
+        offersInputField.gameObject.SetActive(false);
+
+    // Assicura che la barra di ricerca dei prodotti sia visibile all'inizio
+    if (searchInputField != null)
+        searchInputField.gameObject.SetActive(true);
+}
+
+
+
+private void ToggleOffersMenu()
+{
+    isOffersMenuVisible = !isOffersMenuVisible;
+
+    // Usa i riferimenti diretti per alternare la visibilità dei menu
+    if (productsScrollView != null)
+    {
+        productsScrollView.SetActive(!isOffersMenuVisible);
+    }
+    else
+    {
+        Debug.LogError("ProductsScrollView reference is missing!");
+    }
+
+    if (offersScrollView != null)
+    {
+        offersScrollView.SetActive(isOffersMenuVisible);
+    }
+    else
+    {
+        Debug.LogError("OffersScrollView reference is missing!");
+    }
+
+    // Alterna la visibilità tra la barra di ricerca dei prodotti e il campo di input delle offerte
+    if (searchInputField != null)
+        searchInputField.gameObject.SetActive(!isOffersMenuVisible);
+
+    if (offersInputField != null)
+        offersInputField.gameObject.SetActive(isOffersMenuVisible);
+
+    // Cambia il testo del pulsante
+    var buttonText = toggleOffersButton.GetComponentInChildren<TextMeshProUGUI>();
+    if (buttonText != null)
+    {
+        buttonText.text = isOffersMenuVisible ? "Products" : "Offers";
+    }
+    else
+    {
+        Debug.LogError("Button Text component not found in toggleOffersButton!");
+    }
+
+    // Aggiorna la UI del menu visibile
+    if (isOffersMenuVisible)
+    {
+        UpdateOffersUI(); // Aggiorna il menu delle offerte
+    }
+    else
+    {
+        UpdateProductListUI(searchInputField != null ? searchInputField.text : ""); // Aggiorna il menu dei prodotti
+    }
+}
+
+
+private void AddOffer(string offerText)
+{
+    if (string.IsNullOrWhiteSpace(offerText)) return;
+
+    // Aggiungi l'offerta alla lista
+    activeOffers.Add(offerText);
+
+    // Crea una nuova entry nell'UI
+    var newOfferEntry = Instantiate(productEntryPrefab, offersContentPanel);
+    var textComponent = newOfferEntry.GetComponentInChildren<TextMeshProUGUI>();
+    if (textComponent != null)
+        textComponent.text = offerText;
+
+    newOfferEntry.name = offerText;
+
+    // Pulisci il campo di input
+    offersInputField.text = string.Empty;
+}
+
+private void UpdateOffersUI()
+{
+    // Rimuove tutte le entry esistenti
+    foreach (Transform child in offersContentPanel)
+    {
+        Destroy(child.gameObject);
+    }
+
+    // Aggiungi tutte le offerte alla UI
+    foreach (var offer in activeOffers)
+    {
+        var newOfferEntry = Instantiate(productEntryPrefab, offersContentPanel);
+        var textComponent = newOfferEntry.GetComponentInChildren<TextMeshProUGUI>();
+        if (textComponent != null)
+            textComponent.text = offer;
+
+        newOfferEntry.name = offer;
+    }
+}
 }
