@@ -29,6 +29,10 @@ public class ProductListLoader : MonoBehaviour
     [Header("Prefabs")]
     public GameObject productPrefab;
     public GameObject pointerPrefab;
+        public GameObject offerPlaceholderPrefab; // Prefab per l'offerta nella scena
+
+    private Dictionary<string, GameObject> spawnedOffers = new(); // Dizionario per le offerte piazzate
+
 
     [Header("References")]
     public GameObject productListManager;
@@ -41,18 +45,22 @@ public class ProductListLoader : MonoBehaviour
     private const string SaveFolder = "Assets/SavedPrefabs/";
     private const string ProductsFileName = "Products.txt";
     private const string PlacedProductsFileName = "PlacedProducts.txt";
+    private const string PlacedOffersFileName = "PlacedOffers.txt";
+
 
     private bool showOnlySpawned = false;
 
     private void Start()
     {
         InitializePointer();
-        InitializeUI();
-        LoadProducts();
-        LoadPlacedProducts();
-        UpdateProductListUI();
-        InitializeOffersMenu();
-            LoadOffers(); // Carica le offerte dal file
+    InitializeUI();
+    LoadProducts();
+    LoadPlacedProducts(); // Carica i prodotti piazzati
+    LoadPlacedOffers();   // Carica le offerte piazzate
+    UpdateProductListUI();
+    InitializeOffersMenu();
+    LoadOffers(); // Carica le offerte dal file
+    UpdateOffersUI(); // Aggiorna la UI delle offerte
 
     }
 
@@ -103,10 +111,20 @@ public class ProductListLoader : MonoBehaviour
 }
 
     private void ToggleFilter()
+{
+    showOnlySpawned = !showOnlySpawned;
+
+    if (isOffersMenuVisible)
     {
-        showOnlySpawned = !showOnlySpawned;
+        // Mostra solo le offerte piazzate
+        UpdateOffersUI();
+    }
+    else
+    {
+        // Mostra solo i prodotti piazzati
         UpdateProductListUI(searchInputField.text);
     }
+}
 
     private void LoadProducts()
     {
@@ -285,9 +303,113 @@ private const string OffersFileName = "Offers.txt";
 
 private void HandleOfferSelection(string offerText, GameObject entry)
 {
-    SaveOfferToFile(offerText);
-    Debug.Log($"Offer '{offerText}' saved to file.");
+    if (spawnedOffers.ContainsKey(offerText))
+    {
+        // Se l'offerta è già piazzata, focalizza la camera su di essa
+        FocusOnOffer(spawnedOffers[offerText]);
+    }
+    else
+    {
+        // Se l'offerta non è ancora piazzata, spawnala
+        SpawnOffer(offerText, entry);
+    }
 }
+
+
+
+private void SpawnOffer(string offerText, GameObject entry)
+{
+    if (pointerInstance == null)
+    {
+        Debug.LogWarning("Pointer instance is missing or destroyed.");
+        return;
+    }
+
+    if (spawnedOffers.ContainsKey(offerText))
+    {
+        Debug.LogWarning($"Offer '{offerText}' is already spawned.");
+        return;
+    }
+
+    var globalSpawnPosition = pointerInstance.transform.position;
+    var parentTransform = productListManager.transform;
+    var localSpawnPosition = parentTransform.InverseTransformPoint(globalSpawnPosition);
+
+    var newOffer = Instantiate(offerPlaceholderPrefab, parentTransform);
+    newOffer.transform.localPosition = localSpawnPosition;
+    newOffer.name = offerText;
+
+    SetupOfferLabel(newOffer, offerText);
+
+    spawnedOffers[offerText] = newOffer;
+
+    // Aggiorna la voce UI per indicare che è attiva
+    var entryImage = entry.GetComponent<Image>();
+    if (entryImage != null)
+        entryImage.color = Color.green;
+
+    Debug.Log($"Offer '{offerText}' spawned at local position {localSpawnPosition}.");
+}
+
+
+private void FocusOnOffer(GameObject offer)
+{
+    if (offer != null && Camera.main != null)
+    {
+        Vector3 offset = Camera.main.transform.forward * 10f;
+        Camera.main.transform.position = offer.transform.position - offset;
+        Camera.main.transform.LookAt(offer.transform);
+
+        Debug.Log($"Camera focused on {offer.name}.");
+    }
+    else
+    {
+        Debug.LogWarning("Offer or camera is null, focus operation aborted.");
+    }
+}
+
+
+    private void SetupOfferLabel(GameObject offer, string offerText)
+    {
+        var offerBounds = offer.GetComponent<Renderer>()?.bounds.size ?? Vector3.one;
+
+        // Aggiungi l'etichetta sopra l'offerta
+        GameObject textObject = new GameObject("OfferNameText");
+        textObject.transform.SetParent(offer.transform);
+
+        float textOffset = offerBounds.y + 2f;
+        textObject.transform.localPosition = Vector3.up * textOffset;
+
+        var textMesh = textObject.AddComponent<TextMeshPro>();
+        textMesh.text = offerText;
+        textMesh.fontSize = 5f;
+        textMesh.alignment = TextAlignmentOptions.Center;
+        textMesh.color = Color.black;
+
+        if (Camera.main != null)
+        {
+            textObject.transform.rotation = Quaternion.LookRotation(Camera.main.transform.forward, Vector3.up);
+        }
+    }
+
+    private void RemoveOffer(GameObject offer)
+    {
+        if (offer == null)
+        {
+            Debug.LogWarning("The offer you are trying to remove does not exist.");
+            return;
+        }
+
+        string offerName = offer.name;
+
+        if (spawnedOffers.ContainsKey(offerName))
+            spawnedOffers.Remove(offerName);
+
+        Destroy(offer);
+
+        Debug.Log($"Offer '{offerName}' removed from the scene.");
+        UpdateOffersUI();
+    }
 
 private void SaveOfferToFile(string offerText)
 {
@@ -339,6 +461,7 @@ private void RemoveProduct(GameObject product)
 {
     SaveProductListManager();
     SaveProductsToFile();
+    SavePlacedOffers();
     SaveAllOffersToFile();
 }
 
@@ -351,6 +474,69 @@ private void SaveAllOffersToFile()
     File.WriteAllLines(filePath, activeOffers);
     Debug.Log($"All offers saved to {filePath}");
 }
+
+
+private void SavePlacedOffers()
+{
+    var filePath = Path.Combine(ResourcesFolder, PlacedOffersFileName);
+
+    if (!Directory.Exists(ResourcesFolder))
+        Directory.CreateDirectory(ResourcesFolder);
+
+    var lines = spawnedOffers.Select(o =>
+    {
+        var position = o.Value.transform.localPosition;
+        return $"{o.Key}|{position.x},{position.y},{position.z}";
+    }).ToList();
+
+    File.WriteAllLines(filePath, lines);
+
+    Debug.Log($"Placed offers saved to {filePath}");
+}
+
+
+
+
+private void LoadPlacedOffers()
+{
+    var filePath = Path.Combine(ResourcesFolder, PlacedOffersFileName);
+    if (!File.Exists(filePath))
+    {
+        Debug.LogWarning($"PlacedOffers file {PlacedOffersFileName} not found.");
+        return;
+    }
+
+    var lines = File.ReadAllLines(filePath);
+    foreach (var line in lines)
+    {
+        var parts = line.Split('|');
+        if (parts.Length != 2) continue;
+
+        var offerName = parts[0];
+        var positionParts = parts[1].Split(',');
+        if (positionParts.Length != 3) continue;
+
+        if (!float.TryParse(positionParts[0], out var x) ||
+            !float.TryParse(positionParts[1], out var y) ||
+            !float.TryParse(positionParts[2], out var z)) continue;
+
+        var position = new Vector3(x, y, z);
+
+        if (!spawnedOffers.ContainsKey(offerName))
+        {
+            var newOffer = Instantiate(offerPlaceholderPrefab, productListManager.transform);
+            newOffer.transform.localPosition = position;
+            newOffer.name = offerName;
+
+            SetupOfferLabel(newOffer, offerName);
+            spawnedOffers[offerName] = newOffer;
+
+            Debug.Log($"Offer '{offerName}' loaded at {position}");
+        }
+    }
+}
+
+
 
 
 private void SaveProductListManager()
@@ -493,18 +679,10 @@ private void ToggleOffersMenu()
     {
         productsScrollView.SetActive(!isOffersMenuVisible);
     }
-    else
-    {
-        Debug.LogError("ProductsScrollView reference is missing!");
-    }
 
     if (offersScrollView != null)
     {
         offersScrollView.SetActive(isOffersMenuVisible);
-    }
-    else
-    {
-        Debug.LogError("OffersScrollView reference is missing!");
     }
 
     // Alterna la visibilità tra la barra di ricerca dei prodotti e il campo di input delle offerte
@@ -520,19 +698,15 @@ private void ToggleOffersMenu()
     {
         buttonText.text = isOffersMenuVisible ? "Products" : "Offers";
     }
-    else
-    {
-        Debug.LogError("Button Text component not found in toggleOffersButton!");
-    }
 
     // Aggiorna la UI del menu visibile
     if (isOffersMenuVisible)
     {
-        UpdateOffersUI(); // Aggiorna il menu delle offerte
+        UpdateOffersUI();
     }
     else
     {
-        UpdateProductListUI(searchInputField != null ? searchInputField.text : ""); // Aggiorna il menu dei prodotti
+        UpdateProductListUI(searchInputField != null ? searchInputField.text : "");
     }
 }
 
@@ -560,14 +734,24 @@ private void AddOffer(string offerText)
 
 private void UpdateOffersUI()
 {
-    // Rimuove tutte le entry esistenti
+    // Cancella tutte le voci esistenti nel pannello delle offerte
     foreach (Transform child in offersContentPanel)
     {
         Destroy(child.gameObject);
     }
 
-    // Aggiungi tutte le offerte alla UI
-    foreach (var offer in activeOffers)
+    // Filtra le offerte attive o tutte le offerte
+    var filteredOffers = activeOffers;
+
+    if (showOnlySpawned)
+    {
+        // Mostra solo le offerte piazzate
+        filteredOffers = filteredOffers
+            .Where(offer => spawnedOffers.ContainsKey(offer))
+            .ToList();
+    }
+
+    foreach (var offer in filteredOffers)
     {
         var newOfferEntry = Instantiate(productEntryPrefab, offersContentPanel);
         var textComponent = newOfferEntry.GetComponentInChildren<TextMeshProUGUI>();
@@ -575,6 +759,18 @@ private void UpdateOffersUI()
             textComponent.text = offer;
 
         newOfferEntry.name = offer;
+
+        var button = newOfferEntry.GetComponent<Button>();
+        if (button != null)
+            button.onClick.AddListener(() => HandleOfferSelection(offer, newOfferEntry));
+
+        var entryImage = newOfferEntry.GetComponent<Image>();
+        if (entryImage != null)
+        {
+            entryImage.color = spawnedOffers.ContainsKey(offer) ? Color.green : Color.yellow;
+        }
     }
 }
+
+
 }

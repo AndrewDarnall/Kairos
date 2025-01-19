@@ -2147,6 +2147,10 @@ PrefabInstance:
       value: 
       objectReference: {fileID: 1969289414}
     - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+      propertyPath: offerPlaceholderPrefab
+      value: 
+      objectReference: {fileID: 1439434019363453108, guid: 7ab5b8fe5e0ad4ee1aea3f32325ba5fc, type: 3}
+    - target: {fileID: 6463378956688596634, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       propertyPath: activeProductFilterButton
       value: 
       objectReference: {fileID: 1859129745}
@@ -2230,9 +2234,20 @@ PrefabInstance:
     - {fileID: 6842923803120510487, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     - {fileID: 6778083689840701681, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     - {fileID: 3868155021903278593, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5491733970552675169, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 36135727099741095, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5452723051965204464, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 2206799898560502052, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 2435633974678309320, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5464672014487064112, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 4935294545456502196, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 5431063591560516103, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 2038451167267284627, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 1252166908731213543, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - {fileID: 3788340358318995364, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
     m_AddedGameObjects: []
     m_AddedComponents:
-    - targetCorrespondingSourceObject: {fileID: 2071948140088648935, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
+    - targetCorrespondingSourceObject: {fileID: 7469552265465452397, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
       insertIndex: -1
       addedObject: {fileID: 0}
   m_SourcePrefab: {fileID: 100100000, guid: 83de347b557e441d08ffc6ecc264e55f, type: 3}
