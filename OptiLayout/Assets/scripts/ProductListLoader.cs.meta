@@ -1,0 +1,22 @@
+fileFormatVersion: 2
+guid: 41111959049ae4b1794c5610c71974bc
+MonoImporter:
+  externalObjects: {}
+  serializedVersion: 2
+  defaultReferences:
+  - offersScrollView: {instanceID: 0}
+  - toggleOffersButton: {instanceID: 0}
+  - offersInputField: {instanceID: 0}
+  - offersContentPanel: {instanceID: 0}
+  - productEntryPrefab: {instanceID: 0}
+  - contentPanel: {instanceID: 0}
+  - searchInputField: {instanceID: 0}
+  - activeProductFilterButton: {instanceID: 0}
+  - productPrefab: {fileID: 1439434019363453108, guid: 7ab5b8fe5e0ad4ee1aea3f32325ba5fc, type: 3}
+  - pointerPrefab: {fileID: 4912674362072615655, guid: 57961d9905a6f534dbceda4253aded5e, type: 3}
+  - productListManager: {fileID: 5491659175576325259, guid: e5d25c98f462a4f32894ce51b5860d72, type: 3}
+  executionOrder: 0
+  icon: {instanceID: 0}
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
